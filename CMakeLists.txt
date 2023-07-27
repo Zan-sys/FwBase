@@ -46,6 +46,9 @@ endif()
 # Список файлов с исходным кодом
 set(CPP ./src/fw_base_test.cpp)
 
+# СОЗДАНИЕ ДИРЕКТОРИИ BIN BUILD
+FILE(MAKE_DIRECTORY ./bin ./build)
+
 # Каталоги с include файлами
 include_directories(${INCLUDES})
 
