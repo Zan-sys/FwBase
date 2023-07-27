@@ -1,0 +1,34 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build All Debug",
+            "type": "shell",
+            "command": "cd ${workspaceFolder}/build; cmake -DCMAKE_BUILD_TYPE=Debug ..; make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build All Release",
+            "type": "shell",
+            "command": "cd ${workspaceFolder}/build; cmake -DCMAKE_BUILD_TYPE=Release ..; make",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clear",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-rfv",
+                "${workspaceFolder}/build/*",
+                "${workspaceFolder}/bin/*.pdb",
+                "${workspaceFolder}/bin/*.ilk",
+                "${workspaceFolder}/bin/FwBaseTest"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
