@@ -1,0 +1,7 @@
+Для обновления подмодулей git необходимо выполнить следующие команды:
+1. Инициализация подмодулей
+    git submodule init
+2. Загрузка подмодулей
+    git submodule update --depth 1
+Загрузка последней версии подмодуля
+    git submodule update --recursive --remote
