@@ -1589,6 +1589,108 @@ namespace Framework {
             GetTime(std::chrono::system_clock::now(), time, milliseconds, add_year1900_month1, UTC);
         }
         //
+        // Выравнивание строк в таблице
+        //
+        enum class TTableAlign { None, Left, Right, Center };
+        template<typename Type> bool TableAlign(Type& table, TTableAlign align)
+        {
+            static_assert(
+                is_same<Type, std::vector<std::vector<std::string>>>::value ||
+                is_same<Type, std::vector<std::vector<std::wstring>>>::value
+                , "This template requires the type std::vector<std::string|std::wstring>."
+            );
+
+            if (align != TTableAlign::None)
+            {
+                if (size_t row_len(size(table) > 0 ? size(table.at(0)) : 0); row_len > 0)
+                {
+                    typename Type::value_type::value_type::value_type blank;
+                    //
+                    // Инициализация символа-пробела
+                    //
+                    if constexpr(is_string<Type::value_type::value_type>)
+                    {
+                        blank = ' '; 
+                    }
+                    else
+                    {
+                        blank = L' ';
+                    }
+                    //
+                    // Массив для хранения максимальной длинны строки для каждого столбца
+                    //
+                    vector<std::size_t> max_size(row_len, 0);
+                    //
+                    // Определение максимальной длинны строки в таблице
+                    //
+                    for (size_t i(0), k(0); k < size(max_size); )
+                    {
+                        if (size(table.at(i)) == row_len)
+                        {
+                            VOID_AUTO_ENCODING(Type::value_type::value_type, table.at(i).at(k));
+
+                            size_t length(size(table.at(i).at(k)));
+
+                            if (length > max_size.at(k))
+                            {
+                                max_size.at(k) = length;
+                            }
+                            if (i++; i >= size(table))
+                            {
+                                i = 0; k++;
+                            }
+                        }
+                        else
+                        {
+                            return false; // НЕТ ВЫВОДА, НАРУШЕНА СТРУКТУРА ТАБЛИЦЫ
+                        }
+                    }
+                    //
+                    // Выравнивание
+                    //
+                    for (size_t i(0), k(0); k < size(max_size); )
+                    {
+                        size_t add_blanks = max_size.at(k) - size(table.at(i).at(k));
+
+                        if (align == TTableAlign::Left)
+                        {
+                            table.at(i).at(k).insert(end(table.at(i).at(k)), add_blanks, blank);
+                        }
+                        else if (align == TTableAlign::Right)
+                        {
+                            table.at(i).at(k).insert(begin(table.at(i).at(k)), add_blanks, blank);
+                        }
+                        else // Center
+                        {
+                            size_t left(0), right(0);
+
+                            if (add_blanks % 2 == 0)
+                            {
+                                left = add_blanks / 2;
+                                right = left;
+                            }
+                            else
+                            {
+                                left = add_blanks / 2;
+                                right = add_blanks - left;
+                            }
+
+                            table.at(i).at(k).insert(begin(table.at(i).at(k)), left, blank);
+                            table.at(i).at(k).insert(end(table.at(i).at(k)), right, blank);
+                        }
+
+                        if (i++; i >= size(table))
+                        {
+                            i = 0; k++;
+                        }
+                    }
+                }
+                else return false;
+            }
+
+            return true;
+        }
+        //
         // Вывод сообщения в консоль
         //
         template<typename Arg = std::size_t> void ConsoleOut(bool end_line, std::vector<std::string>& concat_string)

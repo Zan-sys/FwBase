@@ -2795,6 +2795,278 @@ TEST(StdExtension, LinuxCmdArgs)
 #endif
 }
 // ---------------------------------------------------------------------------
+TEST(StdExtension, TableAlignS)
+{
+    //
+    // Left
+    //
+    {
+        std::vector<std::vector<std::string>> table = {
+            { "_Value1_", "__Value2__", "___Value3___", "____Value4____" },
+            { "Temp1", "Temp2", "Temp3", "Temp4" },
+            { "1", "2", "3", "4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Left));
+
+        std::vector<std::size_t> max_size;
+
+        for (const auto& value : table.at(0))
+        {
+            max_size.push_back(std::size(value));
+        }
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_EQ(max_size.at(k), std::size(table.at(i).at(k)));
+
+                if (i != 0)
+                {
+                    ASSERT_NE(table.at(i).at(k).front(), ' ');
+                    ASSERT_EQ(table.at(i).at(k).back(), ' ');
+                }
+            }
+        }
+    }
+    //
+    // Right
+    //
+    {
+        std::vector<std::vector<std::string>> table = {
+            { "_Value1_", "__Value2__", "___Value3___", "____Value4____" },
+            { "Temp1", "Temp2", "Temp3", "Temp4" },
+            { "1", "2", "3", "4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Right));
+
+        std::vector<std::size_t> max_size;
+
+        for (const auto& value : table.at(0))
+        {
+            max_size.push_back(std::size(value));
+        }
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_EQ(max_size.at(k), std::size(table.at(i).at(k)));
+
+                if (i != 0)
+                {
+                    ASSERT_EQ(table.at(i).at(k).front(), ' ');
+                    ASSERT_NE(table.at(i).at(k).back(), ' ');
+                }
+            }
+        }
+    }
+    //
+    // Center
+    //
+    {
+        std::vector<std::vector<std::string>> table = {
+            { "_Value1_", "__Value2__", "___Value3___", "____Value4____" },
+            { "Temp1", "Temp2", "Temp3", "Temp4" },
+            { "1", "2", "3", "4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Center));
+
+        std::vector<std::size_t> max_size;
+
+        for (const auto& value : table.at(0))
+        {
+            max_size.push_back(std::size(value));
+        }
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_EQ(max_size.at(k), std::size(table.at(i).at(k)));
+
+                if (i != 0)
+                {
+                    ASSERT_EQ(table.at(i).at(k).front(), ' ');
+                    ASSERT_EQ(table.at(i).at(k).back(), ' ');
+                }
+            }
+        }
+    }
+    //
+    // None
+    //
+    {
+        std::vector<std::vector<std::string>> table = {
+            { "_Value1_", "__Value2__", "___Value3___", "____Value4____" },
+            { "Temp1", "Temp2", "Temp3", "Temp4" },
+            { "1", "2", "3", "4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::None));
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_NE(table.at(i).at(k).front(), ' ');
+                ASSERT_NE(table.at(i).at(k).back(), ' ');
+            }
+        }
+    }
+    //
+    // Error
+    //
+    {
+        std::vector<std::vector<std::string>> table = {
+            { "_Value1_", "__Value2__", "___Value3___", "____Value4____" },
+            { "Temp1", "Temp2", "Temp3", "Temp4", "Temp5" }, // Temp5 - error
+            { "1", "2", "3", "4" }
+        };
+
+        ASSERT_FALSE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Left));
+    }
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TableAlignW)
+{
+    //
+    // Left
+    //
+    {
+        std::vector<std::vector<std::wstring>> table = {
+            { L"_Value1_", L"__Value2__", L"___Value3___", L"____Value4____" },
+            { L"Temp1", L"Temp2", L"Temp3", L"Temp4" },
+            { L"1", L"2", L"3", L"4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Left));
+
+        std::vector<std::size_t> max_size;
+
+        for (const auto& value : table.at(0))
+        {
+            max_size.push_back(std::size(value));
+        }
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_EQ(max_size.at(k), std::size(table.at(i).at(k)));
+
+                if (i != 0)
+                {
+                    ASSERT_NE(table.at(i).at(k).front(), L' ');
+                    ASSERT_EQ(table.at(i).at(k).back(), L' ');
+                }
+            }
+        }
+    }
+    //
+    // Right
+    //
+    {
+        std::vector<std::vector<std::wstring>> table = {
+            { L"_Value1_", L"__Value2__", L"___Value3___", L"____Value4____" },
+            { L"Temp1", L"Temp2", L"Temp3", L"Temp4" },
+            { L"1", L"2", L"3", L"4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Right));
+
+        std::vector<std::size_t> max_size;
+
+        for (const auto& value : table.at(0))
+        {
+            max_size.push_back(std::size(value));
+        }
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_EQ(max_size.at(k), std::size(table.at(i).at(k)));
+
+                if (i != 0)
+                {
+                    ASSERT_EQ(table.at(i).at(k).front(), L' ');
+                    ASSERT_NE(table.at(i).at(k).back(), L' ');
+                }
+            }
+        }
+    }
+    //
+    // Center
+    //
+    {
+        std::vector<std::vector<std::wstring>> table = {
+            { L"_Value1_", L"__Value2__", L"___Value3___", L"____Value4____" },
+            { L"Temp1", L"Temp2", L"Temp3", L"Temp4" },
+            { L"1", L"2", L"3", L"4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Center));
+
+        std::vector<std::size_t> max_size;
+
+        for (const auto& value : table.at(0))
+        {
+            max_size.push_back(std::size(value));
+        }
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_EQ(max_size.at(k), std::size(table.at(i).at(k)));
+
+                if (i != 0)
+                {
+                    ASSERT_EQ(table.at(i).at(k).front(), L' ');
+                    ASSERT_EQ(table.at(i).at(k).back(), L' ');
+                }
+            }
+        }
+    }
+    //
+    // None
+    //
+    {
+        std::vector<std::vector<std::wstring>> table = {
+            { L"_Value1_", L"__Value2__", L"___Value3___", L"____Value4____" },
+            { L"Temp1", L"Temp2", L"Temp3", L"Temp4" },
+            { L"1", L"2", L"3", L"4" }
+        };
+
+        ASSERT_TRUE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::None));
+
+        for (std::size_t i(0); i < std::size(table); i++)
+        {
+            for (std::size_t k(0); k < std::size(table.at(i)); k++)
+            {
+                ASSERT_NE(table.at(i).at(k).front(), L' ');
+                ASSERT_NE(table.at(i).at(k).back(), L' ');
+            }
+        }
+    }
+    //
+    // Error
+    //
+    {
+        std::vector<std::vector<std::wstring>> table = {
+            { L"_Value1_", L"__Value2__", L"___Value3___", L"____Value4____" },
+            { L"Temp1", L"Temp2", L"Temp3", L"Temp4", L"Temp5" }, // Temp5 - error
+            { L"1", L"2", L"3", L"4" }
+        };
+
+        ASSERT_FALSE(Framework::StdExtension::TableAlign(table, Framework::StdExtension::TTableAlign::Left));
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(StdExtension, TSamePair)
 {
     //
