@@ -10,6 +10,15 @@ else()
     message(FATAL_ERROR "TARGET SYSTEM IS NOT WINDOWS OR UNIX-LIKE.")
 endif()
 
+#Определяем разрядность сборки
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_compile_definitions(PROJECT_IMAGE_X64)    
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    add_compile_definitions(PROJECT_IMAGE_X86)    
+else()
+    message(FATAL_ERROR "FAILED TO DETERMINE PROJECT TYPE 32 BIT OR 64 BIT. CHECK CMAKE_SIZEOF_VOID_P VARIABLE.")
+endif()
+
 # Путь к катклогу для генерируемых файлов
 set(EXE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 # Путь к каталогу для исполнительных файлов

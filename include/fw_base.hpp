@@ -1608,7 +1608,7 @@ namespace Framework {
                     //
                     // Инициализация символа-пробела
                     //
-                    if constexpr(is_string<Type::value_type::value_type>)
+                    if constexpr(is_string<typename Type::value_type::value_type>)
                     {
                         blank = ' '; 
                     }
@@ -1627,7 +1627,7 @@ namespace Framework {
                     {
                         if (size(table.at(i)) == row_len)
                         {
-                            VOID_AUTO_ENCODING(Type::value_type::value_type, table.at(i).at(k));
+                            VOID_AUTO_ENCODING(typename Type::value_type::value_type, table.at(i).at(k));
 
                             size_t length(size(table.at(i).at(k)));
 
