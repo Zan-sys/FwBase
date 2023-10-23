@@ -1873,6 +1873,16 @@ TEST(TExtension, Trim)
     // TSExtension (eng)
     //
     {
+        std::string input("Hello World");
+        std::string output("Hello World");
+        auto result = TSExtension::Trim(input);
+        ASSERT_EQ(typeid(result), typeid(output));
+        ASSERT_EQ(result, output);
+    }
+    //
+    // TSExtension (eng)
+    //
+    {
         std::string input("\t \r \n Hello World \r \n \t");
         std::string output("Hello World");
 
@@ -1897,6 +1907,22 @@ TEST(TExtension, Trim)
     {
         std::string input("\t \r \n Hello World");
         std::string output("Hello World");
+
+        auto result = TSExtension::Trim(input);
+        ASSERT_EQ(typeid(result), typeid(output));
+        ASSERT_EQ(result, output);
+    }
+    //
+    // TSExtension (ru)
+    //
+    {
+        std::locale _locale(locale_name);
+
+        std::string input("Привет Мир");
+        std::string output("Привет Мир");
+
+        T_VOID_AUTO_ENCODING_LOC(input, _locale);
+        T_VOID_AUTO_ENCODING_LOC(output, _locale);
 
         auto result = TSExtension::Trim(input);
         ASSERT_EQ(typeid(result), typeid(output));
@@ -2016,6 +2042,16 @@ TEST(TExtension, Trim)
     // TWExtension (eng)
     //
     {
+        std::wstring input(L"Hello World");
+        std::wstring output(L"Hello World");
+        auto result = TWExtension::Trim(input);
+        ASSERT_EQ(typeid(result), typeid(output));
+        ASSERT_EQ(result, output);
+    }
+    //
+    // TWExtension (eng)
+    //
+    {
         std::wstring input(L"\t \r \n Hello World \r \n \t");
         std::wstring output(L"Hello World");
 
@@ -2040,6 +2076,22 @@ TEST(TExtension, Trim)
     {
         std::wstring input(L"Hello World \r \n \t");
         std::wstring output(L"Hello World");
+
+        auto result = TWExtension::Trim(input);
+        ASSERT_EQ(typeid(result), typeid(output));
+        ASSERT_EQ(result, output);
+    }
+    //
+    // TWExtension (ru)
+    //
+    {
+        std::locale _locale(locale_name);
+
+        std::wstring input(L"Привет Мир");
+        std::wstring output(L"Привет Мир");
+
+        T_VOID_AUTO_ENCODING_LOC(input, _locale);
+        T_VOID_AUTO_ENCODING_LOC(output, _locale);
 
         auto result = TWExtension::Trim(input);
         ASSERT_EQ(typeid(result), typeid(output));
