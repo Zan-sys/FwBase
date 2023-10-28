@@ -2720,6 +2720,14 @@ namespace Framework {
         {
         public:
             //
+            // Конструктор
+            //
+            TIniBaseInterface() {}
+            //
+            // Деструктор
+            //
+            virtual ~TIniBaseInterface() {}
+            //
             // Список групп
             //
             virtual void GetGroups(vector<string>& groups) = 0;
