@@ -99,7 +99,9 @@
         "coroutine": "cpp",
         "stop_token": "cpp",
         "*.inc": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     },
     "cSpell.words": [
         "CHANNELPROPERTY",

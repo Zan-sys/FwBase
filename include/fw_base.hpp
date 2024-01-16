@@ -1510,6 +1510,16 @@ namespace Framework {
             return container.back();
         }
         //
+        // Цикл по элементам контейнера с индексом
+        //
+        template<typename TIterator, typename TFunc> void FOR_EACH(TIterator first, TIterator last, TFunc func)
+        {
+            for (TIterator _first(first); _first != last; _first++)
+            {
+                func(std::distance(first, _first), *_first);
+            }
+        }
+        //
         // Удаление дубликатов из вектора
         //
         template<typename Type> void UniqueVector(vector<Type>& vec, function<bool(const Type& value1, const Type& value2)> f_sort = nullptr, function<bool(const Type& value1, const Type& value2)> f_unique = nullptr)

@@ -2624,6 +2624,105 @@ TEST(StdExtension, FrontBack)
     ASSERT_EQ(back_value, values.back());
 }
 // ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Value_True)
+{
+    std::vector<uint32_t> values { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, uint32_t value)
+    {
+        ASSERT_EQ(index, static_cast<std::size_t>(value));
+    });
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Value_False)
+{
+    std::vector<uint32_t> values { 0, 1, 2, 3, 4, 5, 5, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, uint32_t value)
+    {
+        if (index == 6)
+        {
+            ASSERT_NE(index, static_cast<std::size_t>(value));
+        }
+        else
+        {
+            ASSERT_EQ(index, static_cast<std::size_t>(value));
+        }
+    });
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Const_Ref_True)
+{
+    std::vector<uint32_t> values { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, const uint32_t& value)
+    {
+        ASSERT_EQ(index, static_cast<std::size_t>(value));
+    });
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Const_Ref_False)
+{
+    std::vector<uint32_t> values { 0, 1, 2, 3, 4, 5, 5, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, const uint32_t& value)
+    {
+        if (index == 6)
+        {
+            ASSERT_NE(index, static_cast<std::size_t>(value));
+        }
+        else
+        {
+            ASSERT_EQ(index, static_cast<std::size_t>(value));
+        }
+    });
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Ref_True)
+{
+    std::vector<uint32_t> values { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, uint32_t& value)
+    {
+        ASSERT_EQ(index, static_cast<std::size_t>(value));
+    });
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Ref_False)
+{
+    std::vector<uint32_t> values { 0, 1, 2, 3, 4, 5, 5, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, uint32_t& value)
+    {
+        if (index == 6)
+        {
+            ASSERT_NE(index, static_cast<std::size_t>(value));
+        }
+        else
+        {
+            ASSERT_EQ(index, static_cast<std::size_t>(value));
+        }
+    });
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, FOR_EACH_Ref_Change)
+{
+    std::vector<int32_t> result { 0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10 };
+    std::vector<int32_t> values { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    Framework::StdExtension::FOR_EACH(std::begin(values), std::end(values), [](std::size_t index, int32_t& value)
+    {
+        value *= -1;
+    });
+
+    ASSERT_EQ(std::size(result), std::size(values));
+
+    for (std::size_t i(0); i < std::size(result); i++)
+    {
+        ASSERT_EQ(result.at(i), values.at(i));
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(StdExtension, UniqueVector)
 {
     std::vector<std::size_t> input01 {1, 2, 3, 3, 4, 5, 5, 5, 6, 7, 8, 8, 8, 9, 10};
@@ -2737,7 +2836,7 @@ TEST(StdExtension, GetTimeUTC)
     //
     // Вычисляем текущий день
     //
-    _days += 1;
+    _days += year % 4 == 0 ? 2 : 1;
     //
     // Сравниваем значения
     //
@@ -2806,7 +2905,7 @@ TEST(StdExtension, GetTimeLocal)
     //
     // Вычисляем текущий день
     //
-    _days += 1;
+    _days += year % 4 == 0 ? 2 : 1;
     //
     // Сравниваем значения
     //
