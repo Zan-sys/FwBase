@@ -3694,6 +3694,52 @@ TEST(StdExtension, TSafeQueue)
 
     _thread.join();
 }
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeMemoryPool)
+{
+    std::vector<std::string> stings;
+    std::vector<char*> mem_blocks;
+    Framework::StdExtension::Threading::TSafeMemoryPool<char> safe_memory_pool(255);
+    //
+    // Выделение памяти
+    //
+    for (std::size_t i(0); i < 5; i++)
+    {
+        std::string str = Framework::String::TFormater<std::string>::Format("Hello world {0}", i);
+
+        stings.push_back(str);
+
+        char* pool_buffer = safe_memory_pool.New([](char* value, size_t block_size) { memset(value, 0, block_size); });
+
+        memcpy(pool_buffer, str.c_str(), str.length());
+
+        mem_blocks.push_back(pool_buffer);
+    }
+    //
+    // Возврат памяти в пул
+    //
+    for (char* mem_block : mem_blocks)
+    {
+        safe_memory_pool.Delete(mem_block);
+    }
+    mem_blocks.clear();
+    //
+    // Повторное выделение памяти
+    //
+    for (std::size_t i(0); i < 5; i++)
+    {
+        mem_blocks.push_back(safe_memory_pool.New());
+    }
+
+    ASSERT_EQ(mem_blocks.size(), stings.size());
+
+    for (std::size_t i(0); i < stings.size(); i++)
+    {
+        std::string temp(mem_blocks.at(i), strlen(mem_blocks.at(i)));
+
+        ASSERT_EQ(temp, stings.at(i));
+    }
+}
 #pragma endregion
 // ---------------------------------------------------------------------------
 #pragma region Crypto

@@ -1,5 +1,5 @@
 /*
-    Версия 3 от 2023.07.19 автор ZAN
+    Версия 4 от 2024.03.26 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -77,27 +77,32 @@
 // ---------------------------------------------------------------------------
 namespace Framework {
     // ---------------------------------------------------------------------------
-    using namespace std;
-    // ---------------------------------------------------------------------------
-    template<typename T> constexpr bool is_string = std::is_same<T, std::string>::value;
-    template<typename T> constexpr bool is_wstring = std::is_same<T, std::wstring>::value;
-    template<typename T> constexpr bool is_string_wstring = is_string<T> || is_wstring<T>;
-    template<typename T> constexpr bool is_not_string_wstring = !is_string<T> && !is_wstring<T>;
+    //
+    // Условная компиляция
+    //
+    namespace Constexpr
+    {
+        template<typename T> constexpr bool is_string = std::is_same<T, std::string>::value;
+        template<typename T> constexpr bool is_wstring = std::is_same<T, std::wstring>::value;
+        template<typename T> constexpr bool is_string_wstring = is_string<T> || is_wstring<T>;
+        template<typename T> constexpr bool is_not_string_wstring = !is_string<T> && !is_wstring<T>;
 
-    template<typename T> constexpr bool is_bool = std::is_same<T, bool>::value;
-    template<typename T> constexpr bool is_uint8 = std::is_same<T, uint8_t>::value;
-    template<typename T> constexpr bool is_int8 = std::is_same<T, int8_t>::value;
-    template<typename T> constexpr bool is_integer = std::numeric_limits<T>::is_integer;
-    template<typename T> constexpr bool is_float = std::is_floating_point<T>::value;
-    template<typename T> constexpr bool is_integer_float = is_integer<T> || is_float<T>;
-    template<typename T> constexpr bool is_mutex = std::is_same<T, std::mutex>::value;
-    template<typename T> constexpr bool is_tmutex = std::is_same<T, std::timed_mutex>::value;
-    template<typename T> constexpr bool is_any_mutex = is_mutex<T> || is_tmutex<T>;
+        template<typename T> constexpr bool is_bool = std::is_same<T, bool>::value;
+        template<typename T> constexpr bool is_uint8 = std::is_same<T, uint8_t>::value;
+        template<typename T> constexpr bool is_int8 = std::is_same<T, int8_t>::value;
+        template<typename T> constexpr bool is_integer = std::numeric_limits<T>::is_integer;
+        template<typename T> constexpr bool is_float = std::is_floating_point<T>::value;
+        template<typename T> constexpr bool is_integer_float = is_integer<T> || is_float<T>;
+        template<typename T> constexpr bool is_mutex = std::is_same<T, std::mutex>::value;
+        template<typename T> constexpr bool is_tmutex = std::is_same<T, std::timed_mutex>::value;
+        template<typename T> constexpr bool is_any_mutex = is_mutex<T> || is_tmutex<T>;
+    }
     // ---------------------------------------------------------------------------
     //
     // Работка со строками
     //
-    namespace String {
+    namespace String
+    {
         // ---------------------------------------------------------------------------
         //
         // Шаблон содержит статические методы для конвертирования строк
@@ -105,13 +110,15 @@ namespace Framework {
         template<typename T> class TConverter
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
 
             //
             // std::wstring to std::string
             //
-            static string WStringToString(const wstring& w_str, const locale& loc = locale())
+            static std::string WStringToString(const std::wstring& w_str, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 if (w_str.empty())
                 {
                     return string();
@@ -172,8 +179,10 @@ namespace Framework {
             //
             // std::string to std::wstring
             //
-            static wstring StringToWString(const string& s_str, const locale& loc = locale())
+            static std::wstring StringToWString(const std::string& s_str, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 if (s_str.empty()) 
                 {
                     return wstring();
@@ -235,11 +244,11 @@ namespace Framework {
             //
             // char* to std::string or std::wstring
             //
-            static T ToString(const char* value, const locale& loc = locale())
+            static T ToString(const char* value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
-                    return string(value);
+                    return std::string(value);
                 }
                 else // Return std::wstring
                 {
@@ -249,11 +258,11 @@ namespace Framework {
             //
             // char*(size) to std::string or std::wstring
             //
-            static T ToString(const char* value, size_t size, const locale& loc = locale())
+            static T ToString(const char* value, size_t size, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
-                    return string(value, size);
+                    return std::string(value, size);
                 }
                 else // Return std::wstring
                 {
@@ -263,9 +272,9 @@ namespace Framework {
             //
             // std::string to std::string or std::wstring
             //
-            static T ToString(const string& value, const locale& loc = locale())
+            static T ToString(const std::string& value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
                     return value;
                 }
@@ -277,37 +286,37 @@ namespace Framework {
             //
             // wchar_t* to std::string or std::wstring
             //
-            static T ToString(const wchar_t* value, const locale& loc = locale())
+            static T ToString(const wchar_t* value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
                     return ToString(std::wstring(value), loc);
                 }
                 else // Return std::wstring
                 {
-                    return wstring(value);
+                    return std::wstring(value);
                 }
             }
             //
             // wchar_t(size) to std::string or std::wstring
             //
-            static T ToString(const wchar_t* value, size_t size, const locale& loc = locale())
+            static T ToString(const wchar_t* value, size_t size, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
-                    return ToString(wstring(value, size), loc);
+                    return ToString(std::wstring(value, size), loc);
                 }
                 else // Return std::wstring
                 {
-                    return wstring(value, size);
+                    return std::wstring(value, size);
                 }
             }
             //
             // std::wstring to std::string or std::wstring
             //
-            static T ToString(const wstring& value, const locale& loc = locale())
+            static T ToString(const std::wstring& value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
                     return WStringToString(value, loc);
                 }
@@ -319,24 +328,24 @@ namespace Framework {
             //
             // char to std::string or std::wstring
             //
-            static T ToString(const char value, const locale& loc = locale())
+            static T ToString(const char value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
                     return std::string(1, value);
                 }
                 else // Return std::wstring
                 {
-                    string temp(1, value);
+                    std::string temp(1, value);
                     return ToString(temp, loc);
                 }
             }
             //
             // wchar_t to std::string or std::wstring
             //
-            static T ToString(const wchar_t value, const locale& loc = locale())
+            static T ToString(const wchar_t value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
                     std::wstring temp(1, value);
                     return ToString(temp, loc);
@@ -349,11 +358,11 @@ namespace Framework {
             //
             // u16string to std::string or std::wstring
             //
-            static T ToString(const u16string& value, const locale& loc = locale())
+            static T ToString(const std::u16string& value, const std::locale& loc = std::locale())
             {
                 std::wstring temp(value.begin(), value.end());
 
-                if constexpr(is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     return WStringToString(temp, loc);
                 }
@@ -365,11 +374,11 @@ namespace Framework {
             //
             // std::string or std::wstring to u16string
             //
-            static std::u16string ToU16string(const T& value, const locale& loc = locale())
+            static std::u16string ToU16string(const T& value, const std::locale& loc = std::locale())
             {
-                wstring wstr;
+                std::wstring wstr;
 
-                if constexpr(is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     wstr =  StringToWString(value, loc);
                 }
@@ -420,8 +429,10 @@ namespace Framework {
             // precision - точность для типов с плавающей запятой (std::numeric_limits<double>::max_digits10)
             // fixed - дробный тип с фиксированным положением разделителя
             //
-            template<typename Type> static T ToString(Type value, const locale& loc = locale(), const int precision = -1, const bool fixed = false)
+            template<typename Type> static T ToString(Type value, const std::locale& loc = std::locale(), const int precision = -1, const bool fixed = false)
             {
+                using namespace Constexpr;
+
                 if constexpr(is_bool<Type>)
                 {
                     if constexpr(is_string<T>) { return value ? "true" : "false"; }
@@ -458,12 +469,15 @@ namespace Framework {
             // int to hex string
             // Add_0x - добавлять префикс 0x к числу
             //
-            template<typename Type> static T ToHexString(Type value, bool add_0x = true, bool uppercase = true, const locale& loc = locale())
+            template<typename Type> static T ToHexString(Type value, bool add_0x = true, bool uppercase = true, const std::locale& loc = std::locale())
             {
+                using namespace std;
+                using namespace Constexpr;
+
                 static_assert(is_integer<Type>, "Expected types: int, unsigned int, long, unsigned long, long long, unsigned long long.");
 
-                std::array<typename T::value_type, 17> hex;
-                std::array<typename T::value_type, 3> hex_pref;
+                array<typename T::value_type, 17> hex;
+                array<typename T::value_type, 3> hex_pref;
 
                 if constexpr(is_string<T>)
                 {
@@ -500,8 +514,11 @@ namespace Framework {
             // std::string or std::wstring to TYPE
             // def - значение в случае ошибки при преобразовании
             //
-            template<typename Type> static Type FromString(T value, const Type def, const locale& loc = locale())
+            template<typename Type> static Type FromString(T value, const Type def, const std::locale& loc = std::locale())
             {
+                using namespace std;
+                using namespace Constexpr;
+
                 if constexpr(is_float<Type>) // Убираем зависимость от разделителя дробной части
                 {
                     typename T::value_type dot;
@@ -578,19 +595,19 @@ namespace Framework {
             //
             static T EmptyString()
             {
-                if constexpr(is_string<T>) // Return std::string
+                if constexpr(Constexpr::is_string<T>) // Return std::string
                 {
-                    return string("");
+                    return std::string("");
                 }
                 else // Return std::wstring
                 {
-                    return wstring(L"");
+                    return std::wstring(L"");
                 }
             }
         };
 
-        using TStringConverter = TConverter<string>;
-        using TWStringConverter = TConverter<wstring>;
+        using TStringConverter = TConverter<std::string>;
+        using TWStringConverter = TConverter<std::wstring>;
         // ---------------------------------------------------------------------------
         //
         // Шаблон обеспечивает форматирование строк
@@ -598,13 +615,13 @@ namespace Framework {
         template <typename T> class TFormater
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
 
-            static T _format(const T& format, std::vector<T> &str_list, const locale& loc)
+            static T _format(const T& format, std::vector<T> &str_list, const std::locale& loc)
             {
                 T open, close;
 
-                if constexpr(is_string<T>) { open = "{"; close = "}"; }
+                if constexpr(Constexpr::is_string<T>) { open = "{"; close = "}"; }
                 else { open = L"{"; close = L"}"; }
 
                 T result = format;
@@ -618,30 +635,31 @@ namespace Framework {
                 return result;
             }
 
-            template<typename Arg> static T _format(const T& format, vector<T>& str_list, const locale& loc, Arg arg)
+            template<typename Arg> static T _format(const T& format, std::vector<T>& str_list, const std::locale& loc, Arg arg)
             {
                 str_list.push_back(TConverter<T>::ToString(arg, loc));
                 return _format(format, str_list, loc);
             }
 
-            template<typename Arg, typename... Args> static T _format(const T& format, vector<T>& str_list, const locale& loc, Arg arg, Args... args)
+            template<typename Arg, typename... Args> static T _format(const T& format, std::vector<T>& str_list, const std::locale& loc, Arg arg, Args... args)
             {
                 str_list.push_back(TConverter<T>::ToString(arg, loc));
                 return _format(format, str_list, loc, args...);
             }
 
-            static void _concatenate(T& source, vector<T> &str_list)
+            static void _concatenate(T& source, std::vector<T> &str_list)
             {
+                using namespace std;
                 for_each(begin(str_list), end(str_list), [&](T value) { source += value; });
             }
 
-            template<typename Arg> static void _concatenate(T& source, vector<T>& str_list, const locale& loc, Arg arg)
+            template<typename Arg> static void _concatenate(T& source, std::vector<T>& str_list, const std::locale& loc, Arg arg)
             {
                 str_list.push_back(TConverter<T>::ToString(arg, loc));
                 _concatenate(source, str_list);
             }
 
-            template<typename Arg, typename... Args> static void _concatenate(T& source, vector<T>& str_list, const locale& loc, Arg arg, Args... args)
+            template<typename Arg, typename... Args> static void _concatenate(T& source, std::vector<T>& str_list, const std::locale& loc, Arg arg, Args... args)
             {
                 str_list.push_back(TConverter<T>::ToString(arg, loc));
                 _concatenate(source, str_list, loc, args...);
@@ -669,8 +687,10 @@ namespace Framework {
             //
             // Поднятие в верхний регистр первого символа
             //
-            static T& UpperFirst(T& source, const locale& loc = locale())
+            static T& UpperFirst(T& source, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 wstring temp (TConverter<wstring>::ToString(source, loc));
 
                 temp.at(0) = toupper<wchar_t>(temp.at(0), loc);
@@ -682,8 +702,10 @@ namespace Framework {
             //
             // Преобразование строки в верхний регистр
             //
-            static T& UpperCase(T& source, const locale& loc = locale())
+            static T& UpperCase(T& source, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 wstring temp (TConverter<wstring>::ToString(source, loc));
 
                 transform(begin(temp), end(temp), begin(temp), [&](wchar_t c) { return toupper<wchar_t>(c, loc); });
@@ -695,8 +717,10 @@ namespace Framework {
             //
             // Преобразование строки в нижний регистр
             //
-            static T& LowerCase(T& source, const locale& loc = locale())
+            static T& LowerCase(T& source, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 wstring temp (TConverter<wstring>::ToString(source, loc));
 
                 transform(begin(temp), end(temp), begin(temp), [&](wchar_t c) { return tolower<wchar_t>(c, loc); });
@@ -708,7 +732,7 @@ namespace Framework {
             //
             // Форматированный вывод даты и времени. Шаблон по функции put_time.
             //
-            static T LocalTime(const T& format, const locale& loc = locale())
+            static T LocalTime(const T& format, const std::locale& loc = std::locale())
             {
                 std::tm _tm = {0};
 
@@ -727,19 +751,19 @@ namespace Framework {
             //
             template<typename Arg, typename... Args> static T Format(const T& format, Arg arg, Args... args)
             {
-                vector<T> str_list;
-                return _format(format, str_list, locale(), arg, args...);
+                std::vector<T> str_list;
+                return _format(format, str_list, std::locale(), arg, args...);
             }
-            template<typename Arg, typename... Args> static T Format(const T& format, const locale& loc, Arg arg, Args... args)
+            template<typename Arg, typename... Args> static T Format(const T& format, const std::locale& loc, Arg arg, Args... args)
             {
-                vector<T> str_list;
+                std::vector<T> str_list;
                 return _format(format, str_list, loc, arg, args...);
             }
             template<typename Arg, typename... Args> static void VoidFormat(T& dest, const T& format, Arg arg, Args... args)
             {
                 dest = Format(format, arg, args...);
             }
-            template<typename Arg, typename... Args> static void VoidFormat(T& dest, const T& format, const locale& loc, Arg arg, Args... args)
+            template<typename Arg, typename... Args> static void VoidFormat(T& dest, const T& format, const std::locale& loc, Arg arg, Args... args)
             {
                 dest = Format(format, loc, arg, args...);
             }
@@ -748,12 +772,12 @@ namespace Framework {
             //
             template<typename Arg, typename... Args> static void VoidConcatenate(T& source, Arg arg, Args... args)
             {
-                vector<T> str_list;
-                _concatenate(source, str_list, locale(), arg, args...);
+                std::vector<T> str_list;
+                _concatenate(source, str_list, std::locale(), arg, args...);
             }
-            template<typename Arg, typename... Args> static void VoidConcatenate(T& source, const locale& loc, Arg arg, Args... args)
+            template<typename Arg, typename... Args> static void VoidConcatenate(T& source, const std::locale& loc, Arg arg, Args... args)
             {
-                vector<T> str_list;
+                std::vector<T> str_list;
                 _concatenate(source, str_list, loc, arg, args...);
             }
             template<typename Arg, typename... Args> static T Concatenate(Arg arg, Args... args)
@@ -762,7 +786,7 @@ namespace Framework {
                 VoidConcatenate(source, arg, args...);
                 return source;
             }
-            template<typename Arg, typename... Args> static T Concatenate(const locale& loc, Arg arg, Args... args)
+            template<typename Arg, typename... Args> static T Concatenate(const std::locale& loc, Arg arg, Args... args)
             {
                 T source;
                 VoidConcatenate(source, loc, arg, args...);
@@ -779,13 +803,13 @@ namespace Framework {
         template <typename T> class TExtension
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
 
         public:
             //
             // Сравнение строк
             //
-            static bool Compare(const T& source1, const T& source2, bool case_insensitive = false, const locale& loc = locale())
+            static bool Compare(const T& source1, const T& source2, bool case_insensitive = false, const std::locale& loc = std::locale())
             {
                 if (case_insensitive)
                 {
@@ -805,7 +829,7 @@ namespace Framework {
             //
             // Одна из строк source2 должна совпасть с source1
             //
-            static bool Compare(const T& source1, const vector<T>& source2, bool case_insensitive = false, const locale& loc = locale())
+            static bool Compare(const T& source1, const std::vector<T>& source2, bool case_insensitive = false, const std::locale& loc = std::locale())
             {
                 bool result(false);
 
@@ -820,8 +844,10 @@ namespace Framework {
             //
             // source1 должен совпасть с одним из значений source2, возвращается значение под тем же индексом из result иначе def
             //
-            template <typename Type> static Type Compare(const T& source1, const vector<T>& source2, const vector<Type>& result, const Type& def, bool case_insensitive = false, const locale& loc = locale())
+            template <typename Type> static Type Compare(const T& source1, const std::vector<T>& source2, const std::vector<Type>& result, const Type& def, bool case_insensitive = false, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 if (size(source2) == size(result))
                 {
                     for (auto i = begin(source2); i != end(source2); i++)
@@ -837,9 +863,11 @@ namespace Framework {
                 return def;
             }
 
-            template <typename Type> static T Compare(const Type& source1, const vector<Type>& source2, const vector<T>& result, const T& def)
+            template <typename Type> static T Compare(const Type& source1, const std::vector<Type>& source2, const std::vector<T>& result, const T& def)
             {
-                static_assert(is_not_string_wstring<Type>, "This template requires not string.");
+                using namespace std;
+
+                static_assert(Constexpr::is_not_string_wstring<Type>, "This template requires not string.");
 
                 if (size(source2) == size(result))
                 {
@@ -860,6 +888,8 @@ namespace Framework {
             //
             static std::vector<T> Split(const T& source, const typename T::value_type delimiter)
             {
+                using namespace std;
+
                 basic_stringstream<typename T::value_type, std::char_traits<typename T::value_type>, std::allocator<typename T::value_type>> stream(source);
 
                 T item;
@@ -878,6 +908,8 @@ namespace Framework {
             //
             static T UnSplit(const std::vector<T>& source, const typename T::value_type delimiter = 0)
             {
+                using namespace std;
+
                 T result;
 
                 for_each(begin(source), end(source), [&](const T& str) { result += str; if (delimiter != 0) result += delimiter; });
@@ -889,6 +921,8 @@ namespace Framework {
 
             static T UnSplit(const std::vector<T>& source, const T& delimiter)
             {
+                using namespace std;
+
                 T result;
 
                 for_each(begin(source), end(source), [&](const T& str) { result += str; if (size(delimiter) > 0) result += delimiter; });
@@ -906,9 +940,11 @@ namespace Framework {
                 dest = UnSplit(source, delimiter);
             }
 
-            template<typename Type> static T TUnSplit(const std::vector<Type> source, const typename T::value_type delimiter, const locale& loc = locale(), const int precision = -1, const bool fixed = false)
+            template<typename Type> static T TUnSplit(const std::vector<Type> source, const typename T::value_type delimiter, const std::locale& loc = std::locale(), const int precision = -1, const bool fixed = false)
             {
-                static_assert(is_not_string_wstring<Type>, "This template requires not string.");
+                using namespace std;
+
+                static_assert(Constexpr::is_not_string_wstring<Type>, "This template requires not string.");
             
                 T result;
 
@@ -926,10 +962,12 @@ namespace Framework {
                 return result;
             }
 
-            template<typename Type> static T TUnSplit(const std::vector<Type> source, const T& delimiter, const locale& loc = locale(), const int precision = -1, const bool fixed = false)
+            template<typename Type> static T TUnSplit(const std::vector<Type> source, const T& delimiter, const std::locale& loc = std::locale(), const int precision = -1, const bool fixed = false)
             {
-                static_assert(is_not_string_wstring<Type>, "This template requires not string.");
-            
+                using namespace std;
+
+                static_assert(Constexpr::is_not_string_wstring<Type>, "This template requires not string.");
+
                 T result;
 
                 for_each(begin(source), end(source), [&](const Type& value)
@@ -956,7 +994,7 @@ namespace Framework {
             {
                 T whitespace;
 
-                if constexpr(Framework::is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     whitespace = " \t\r\n";
                 }
@@ -999,11 +1037,11 @@ namespace Framework {
             //
             // Строка является IP адресом
             //
-            static bool IsIP(const T& ip, const locale& loc = locale())
+            static bool IsIP(const T& ip, const std::locale& loc = std::locale())
             {
                 T exp;
 
-                if constexpr(Framework::is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     exp = "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$";
                 }
@@ -1012,19 +1050,21 @@ namespace Framework {
                     exp = L"^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$";
                 }
 
-                basic_regex<typename T::value_type> pattern(exp);
+                std::basic_regex<typename T::value_type> pattern(exp);
 
-                return regex_match(ip, pattern);
+                return std::regex_match(ip, pattern);
             }
 
             //
             // Преобразование Ip адреса в маску 4 байта
             //
-            static uint32_t IpToMask32(const T& ip, const locale& loc = locale())
+            static uint32_t IpToMask32(const T& ip, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 typename T::value_type del;
 
-                if constexpr(Framework::is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     del = '.';
                 }
@@ -1056,8 +1096,8 @@ namespace Framework {
             }
         };
 
-        using TStringExtension = TExtension<string>;
-        using TWStringExtension = TExtension<wstring>;
+        using TStringExtension = TExtension<std::string>;
+        using TWStringExtension = TExtension<std::wstring>;
         // ---------------------------------------------------------------------------
         //
         // Класс обеспечивает работу с кодировками
@@ -1065,7 +1105,7 @@ namespace Framework {
         template<typename T> class TEncoding
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
 
             typedef struct { uint8_t cp1251; uint32_t unicode; } Cp1251;
 
@@ -1402,8 +1442,10 @@ namespace Framework {
             //
             // Конвертирование строки с кодировкой utf8 в строку с кодировкой cp1251
             //
-            static T Utf8ToCp1251(const T& value, const locale& loc = locale())
+            static T Utf8ToCp1251(const T& value, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 string utf8 = TConverter<string>::ToString(value, loc);
 
                 string ascii(size(utf8) + 1, '\0');
@@ -1423,8 +1465,10 @@ namespace Framework {
             //
             // Конвертирование строки с кодировкой cp1251 в строку с кодировкой utf8
             //
-            static T Cp1251ToUtf8(const T& value, const locale& loc = locale())
+            static T Cp1251ToUtf8(const T& value, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 string ascii = TConverter<string>::ToString(value, loc);
 
                 string utf8(cp1251_to_utf8_size(ascii.c_str()), 0);
@@ -1439,16 +1483,19 @@ namespace Framework {
             //
             // Строка с кодировкой utf8
             //
-            static bool IsUtf8(const T& value, const locale& loc = locale())
+            static bool IsUtf8(const T& value, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 string ascii = TConverter<string>::ToString(value, loc);
+
                 return is_utf8(ascii.c_str());
             }
             
             //
             // Автоматическое конвертирование строки в зависимости от операционной системы
             //
-            static T Auto(const T& value, const locale& loc = locale())
+            static T Auto(const T& value, const std::locale& loc = std::locale())
             {
                 bool is_utf = IsUtf8(value, loc);
 #ifdef WINDOWS
@@ -1461,7 +1508,7 @@ namespace Framework {
             //
             // Конвертирование строки в UTF8
             //
-            static T ToUtf8(const T& value, const locale& loc = locale())
+            static T ToUtf8(const T& value, const std::locale& loc = std::locale())
             {
                 return IsUtf8(value, loc) ? value : Cp1251ToUtf8(value, loc);
             }
@@ -1469,14 +1516,14 @@ namespace Framework {
             //
             // Конвертирование строки в cp1251
             //
-            static T ToCp1251(const T& value, const locale& loc = locale())
+            static T ToCp1251(const T& value, const std::locale& loc = std::locale())
             {
                 return IsUtf8(value, loc) ? Utf8ToCp1251(value, loc) : value;
             }
         };
 
-        using TStringEncoding = TEncoding<string>;
-        using TWStringEncoding = TEncoding<wstring>;
+        using TStringEncoding = TEncoding<std::string>;
+        using TWStringEncoding = TEncoding<std::wstring>;
     }
     //
     // Расширение функционала стандартной библиотеки
@@ -1492,7 +1539,7 @@ namespace Framework {
         //
         template<typename Type> const typename Type::value_type* C_STR(const Type& value)
         {
-            static_assert(is_string_wstring<Type>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<Type>, "This template requires the type std::string or std::wstring.");
             return value.c_str();
         }
         //
@@ -1522,8 +1569,10 @@ namespace Framework {
         //
         // Удаление дубликатов из вектора
         //
-        template<typename Type> void UniqueVector(vector<Type>& vec, function<bool(const Type& value1, const Type& value2)> f_sort = nullptr, function<bool(const Type& value1, const Type& value2)> f_unique = nullptr)
+        template<typename Type> void UniqueVector(std::vector<Type>& vec, std::function<bool(const Type& value1, const Type& value2)> f_sort = nullptr, std::function<bool(const Type& value1, const Type& value2)> f_unique = nullptr)
         {
+            using namespace std;
+
             if (f_sort == nullptr) sort(begin(vec), end(vec));
             else sort(begin(vec), end(vec), f_sort);
 
@@ -1535,7 +1584,7 @@ namespace Framework {
         //
         template<typename Type> bool AreSame(Type a, Type b)
         {
-            static_assert(is_float<Type>, "This template requires the type float or double.");
+            static_assert(Constexpr::is_float<Type>, "This template requires the type float or double.");
             Type value(std::fabs(a - b));
             return value < std::numeric_limits<Type>::epsilon();
         }
@@ -1544,7 +1593,7 @@ namespace Framework {
         //
         template<typename Type = std::string> bool LinuxCmdArgs(std::vector<Type>& cmd_argc)
         {
-            static_assert(is_string_wstring<Type>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<Type>, "This template requires the type std::string or std::wstring.");
 
             cmd_argc.clear();
 #if defined(WINDOWS)
@@ -1604,6 +1653,8 @@ namespace Framework {
         enum class TTableAlign { None, Left, Right, Center };
         template<typename Type> bool TableAlign(Type& table, TTableAlign align)
         {
+            using namespace std;
+
             static_assert(
                 is_same<Type, std::vector<std::vector<std::string>>>::value ||
                 is_same<Type, std::vector<std::vector<std::wstring>>>::value
@@ -1618,7 +1669,7 @@ namespace Framework {
                     //
                     // Инициализация символа-пробела
                     //
-                    if constexpr(is_string<typename Type::value_type::value_type>)
+                    if constexpr(Constexpr::is_string<typename Type::value_type::value_type>)
                     {
                         blank = ' '; 
                     }
@@ -1740,7 +1791,7 @@ namespace Framework {
 
         template<typename Type> void ConsoleOut(const Type& value, bool end_line = true)
         {
-            if constexpr((std::is_same<std::vector<string>, Type>::value) || (std::is_same<std::vector<wstring>, Type>::value)) // vector<string> || vector<wstring>
+            if constexpr((std::is_same<std::vector<std::string>, Type>::value) || (std::is_same<std::vector<std::wstring>, Type>::value)) // vector<string> || vector<wstring>
             {
                 for (const auto& str : value)
                 {
@@ -1893,13 +1944,13 @@ namespace Framework {
         //
         // Класс описывает пару строк (с разбиением входной строки по разделителю)
         //
-        template <typename T> class TSamePair : public pair<T, T>
+        template <typename T> class TSamePair : public std::pair<T, T>
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
 
-            basic_regex<typename T::value_type> reg_value; // Правило для проверки пары
-            basic_regex<typename T::value_type> reg_empty_value; // Правило для проверки пары с пустым значением
+            std::basic_regex<typename T::value_type> reg_value; // Правило для проверки пары
+            std::basic_regex<typename T::value_type> reg_empty_value; // Правило для проверки пары с пустым значением
 
             typename T::value_type _delimiter; // Разделитель пары
             bool is_matched; // Пара разобрана
@@ -1909,10 +1960,12 @@ namespace Framework {
             //
             T GetDelimiter(typename T::value_type delimiter)
             {
+                using namespace std;
+
                 T result;
                 vector<typename T::value_type> check;
 
-                if constexpr(is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     result = "\\";
                     check = { '[', ']', '\\', '/', '^', '$', '.', '|', '?', '*', '+', '(', ')', '{', '}' };
@@ -1946,7 +1999,7 @@ namespace Framework {
                 T rule;
                 T empty_rule;
 
-                if constexpr(is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     rule = "^.+" + GetDelimiter(_delimiter);
                     empty_rule = rule;
@@ -2013,13 +2066,13 @@ namespace Framework {
             template<typename T> class TEvent
             {
             public:
-                using TEventProc = function<void(T&)>;
-                using TEventHandle = shared_ptr<TEventProc>;
+                using TEventProc =      std::function<void(T&)>;
+                using TEventHandle =    std::shared_ptr<TEventProc>;
                 friend class TEventAccessor<T>;
 
             private:
-                mutable mutex lock;
-                set<TEventHandle> event_list;
+                mutable std::mutex lock;
+                std::set<TEventHandle> event_list;
 
             protected:
                 //
@@ -2027,7 +2080,7 @@ namespace Framework {
                 //
                 void Invoke(T& _arg)
                 {
-                    lock_guard<mutex> locker(lock);
+                    std::lock_guard<decltype(lock)> locker(lock);
 
                     for (auto& handle : event_list)
                     {
@@ -2053,7 +2106,7 @@ namespace Framework {
                 {
                     if (event_proc != nullptr)
                     {
-                        lock_guard<mutex> locker(lock);
+                        std::lock_guard<decltype(lock)> locker(lock);
 
                         event_list.clear();
 
@@ -2079,7 +2132,7 @@ namespace Framework {
                 {
                     if (event_proc != nullptr)
                     {
-                        lock_guard<mutex> locker(lock);
+                        std::lock_guard<decltype(lock)> locker(lock);
 
                         TEventHandle handle(new TEventProc(event_proc));
 
@@ -2101,7 +2154,7 @@ namespace Framework {
                 //
                 void Remove(TEventHandle handle)
                 {
-                    lock_guard<mutex> locker(lock);
+                    std::lock_guard<decltype(lock)> locker(lock);
 
                     auto _handle = event_list.find(handle);
 
@@ -2156,7 +2209,7 @@ namespace Framework {
             //
             template<typename Type> void DeletePtrMutex(Type* mtx)
             {
-                static_assert(is_any_mutex<Type>, "This template requires any mutex.");
+                static_assert(Constexpr::is_any_mutex<Type>, "This template requires any mutex.");
                 if (mtx)
                 {
                     mtx->try_lock();
@@ -2233,7 +2286,7 @@ namespace Framework {
                 //
                 static void Sleep(uint32_t milliseconds)
                 {
-                    std::this_thread::sleep_for(chrono::milliseconds(milliseconds));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
                 }
             };
 
@@ -2283,7 +2336,7 @@ namespace Framework {
                 {
                     std::unique_lock<decltype(mtx)> lock(mtx);
 
-                    if (!cv.wait_for(lock, chrono::milliseconds(ms), [&]() { return counter > 0; }))
+                    if (!cv.wait_for(lock, std::chrono::milliseconds(ms), [&]() { return counter > 0; }))
                     {
                         return false;
                     }
@@ -2370,7 +2423,7 @@ namespace Framework {
                         if (!write_semaphore.WaitFor(ms_wait)) return false;
                     }
                     {
-                        lock_guard<decltype(locker)> lg(locker);
+                        std::lock_guard<decltype(locker)> lg(locker);
 
                         queue.push_back(data);
 
@@ -2395,7 +2448,7 @@ namespace Framework {
                             if (!read_semaphore.WaitFor(ms_wait)) return false;
                         }
                         {
-                            lock_guard<decltype(locker)> lg(locker);
+                            std::lock_guard<decltype(locker)> lg(locker);
 
                             if (queue.empty()) 
                             {
@@ -2418,7 +2471,7 @@ namespace Framework {
                 //
                 bool First(T& data)
                 {
-                    lock_guard<decltype(locker)> lg(locker);
+                    std::lock_guard<decltype(locker)> lg(locker);
 
                     bool not_empty = !queue.empty();
 
@@ -2435,7 +2488,7 @@ namespace Framework {
                 //
                 size_t Size()
                 {
-                    lock_guard<decltype(locker)> lg(locker);
+                    std::lock_guard<decltype(locker)> lg(locker);
                     return std::size(queue);
                 }
 
@@ -2444,7 +2497,7 @@ namespace Framework {
                 //
                 bool IsEmpty()
                 {
-                    lock_guard<decltype(locker)> lg(locker);
+                    std::lock_guard<decltype(locker)> lg(locker);
                     return queue.empty();
                 }
 
@@ -2453,7 +2506,7 @@ namespace Framework {
                 //
                 bool IsFull()
                 {
-                    lock_guard<decltype(locker)> lg(locker);
+                    std::lock_guard<decltype(locker)> lg(locker);
                     return std::size(queue) == max_items;
                 }
 
@@ -2462,7 +2515,7 @@ namespace Framework {
                 //
                 void Clear()
                 {
-                   lock_guard<decltype(locker)> lg(locker);
+                   std::lock_guard<decltype(locker)> lg(locker);
 
                     size_t count(std::size(queue));
 
@@ -2475,6 +2528,129 @@ namespace Framework {
                     read_semaphore.ToZero();
                 }
             };
+
+            //
+            // Пул памяти
+            //
+            template <typename T = char> class TSafeMemoryPool
+            {
+                private:
+                    std::mutex locker;          // Обеспечивает монопольный доступ к данным класса
+
+                    std::size_t _num_elements;        // Количество элементов в одном блоке памяти
+
+                    std::deque<T*> all_mem_blocks;   // Список всех блоков памяти
+
+                    std::deque<T*> used_mem_blocks;  // Список используемых блоков памяти
+
+                    //
+                    // Инициализация нового блока памяти
+                    //
+                    T* NewMemBlock() { return _num_elements > 1 ? new T[_num_elements] : new T; }
+
+                    //
+                    // Освобождение памяти выделенной под блок памяти
+                    //
+                    void FreeMemBlock(T* mem_block)
+                    {
+                        if (mem_block)
+                        {
+                            if (_num_elements > 1)
+                                delete [] mem_block;
+                            else
+                                delete mem_block;
+                        }
+                    }
+
+                public:
+                    //
+                    // Конструктор
+                    //
+                    TSafeMemoryPool(std::size_t num_elements) : _num_elements(num_elements) {}
+
+                    //
+                    // Деструктор
+                    //
+                    ~TSafeMemoryPool()
+                    {
+                        using namespace std;
+                        //
+                        // Освобождение памяти
+                        //
+                        for_each(begin(all_mem_blocks), end(all_mem_blocks), bind(&TSafeMemoryPool<T>::FreeMemBlock, this, placeholders::_1));
+                        //
+                        // Очистка списков
+                        //
+                        all_mem_blocks.clear();
+                        used_mem_blocks.clear();
+                    }
+
+                    //
+                    // Выделение памяти
+                    //
+                    T* New(std::function<void(T*, std::size_t)> data_routine = nullptr)
+                    {
+                        T* mem_block(nullptr);
+
+                        {
+                            std::lock_guard<decltype(locker)> lg(locker);
+
+                            if (used_mem_blocks.empty())
+                            {
+                                mem_block = NewMemBlock();
+
+                                all_mem_blocks.push_back(mem_block);
+                            }
+                            else
+                            {
+                                mem_block = used_mem_blocks.front();
+
+                                used_mem_blocks.pop_front();
+                            }
+                        }
+
+                        if (data_routine) data_routine(mem_block, _num_elements);
+
+                        return mem_block;
+                    }
+
+                    //
+                    // Быстрый возврат памяти в пул
+                    //
+                    void Delete(T* mem_block, std::function<void(T*, std::size_t)> data_routine = nullptr)
+                    {
+                        if (mem_block)
+                        {
+                            if (data_routine) data_routine(mem_block, _num_elements);
+
+                            {
+                                std::lock_guard<decltype(locker)> lg(locker);
+
+                                used_mem_blocks.push_back(mem_block);
+                            }
+                        }
+                    }
+
+                    //
+                    // Безопасный возврат памяти в пул
+                    //
+                    void SafeDelete(T* mem_block, std::function<void(T*, std::size_t)> data_routine = nullptr)
+                    {
+                        if (mem_block)
+                        {
+                            if (data_routine) data_routine(mem_block, _num_elements);
+
+                            {
+                                std::lock_guard<decltype(locker)> lg(locker);
+
+                                if (auto check(find(begin(all_mem_blocks), end(all_mem_blocks), mem_block)); check != end(all_mem_blocks))
+                                {
+                                    used_mem_blocks.push_back(mem_block);
+                                }
+                            }
+                        }
+                    }
+            };
         }
     }
     //
@@ -2482,9 +2658,9 @@ namespace Framework {
     //
     namespace Crypto
     {
-        template<typename T = string> class TCRC {
+        template<typename T = std::string> class TCRC {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
             //
             // Таблица для быстрого расчета контрольной суммы CRC32-IEEE 802.3
             //
@@ -2604,24 +2780,24 @@ namespace Framework {
             //
             // Расчёт hash суммы 32 бита
             //
-            static uint32_t Normal_HASH32(const T& hash, const locale& loc = locale())
+            static uint32_t Normal_HASH32(const T& hash, const std::locale& loc = std::locale())
             {
-                string _hash = String::TConverter<decltype(_hash)>::ToString(hash, loc);
+                std::string _hash = String::TConverter<decltype(_hash)>::ToString(hash, loc);
                 return CRC32(StdExtension::C_STR(_hash), size(_hash));
             }
             //
             // Расчёт hash суммы 32 бита
             //
-            static uint32_t UPPER_HASH32(const T& hash, const locale& loc = locale())
+            static uint32_t UPPER_HASH32(const T& hash, const std::locale& loc = std::locale())
             {
-                string _hash = String::TConverter<decltype(_hash)>::ToString(hash, loc);
+                std::string _hash = String::TConverter<decltype(_hash)>::ToString(hash, loc);
                 String::TFormater<decltype(_hash)>::UpperCase(_hash, loc);
                 return CRC32(StdExtension::C_STR(_hash), size(_hash));
             }
             //
             // Расчёт hash суммы size_t
             //
-            static size_t UPPER_HASH(const T& hash, const locale& loc = locale())
+            static size_t UPPER_HASH(const T& hash, const std::locale& loc = std::locale())
             {
                 T _hash(hash);
                 String::TFormater<T>::UpperCase(_hash, loc);
@@ -2630,25 +2806,25 @@ namespace Framework {
             //
             // Расчёт hash суммы size_t
             //
-            static size_t HASH(const T& hash, const locale& loc = locale())
+            static size_t HASH(const T& hash, const std::locale& loc = std::locale())
             {
                 return std::hash<T>()(hash);
             }
             //
             // Расчёт hash суммы по алгоритму фирмы InSys использовалась на LMZ (много коллизий использовать не рекомендуется)
             //
-            static uint32_t InSysHASH(const T& hash, const locale& loc = locale())
+            static uint32_t InSysHASH(const T& hash, const std::locale& loc = std::locale())
             {
                 if (hash.empty()) return 0;
 
-                string _hash = String::TConverter<decltype(_hash)>::ToString(hash, loc);
+                std::string _hash = String::TConverter<decltype(_hash)>::ToString(hash, loc);
                 String::TFormater<decltype(_hash)>::UpperCase(_hash, loc);
 
                 const unsigned long c = (unsigned long)0xF0000000UL;
                 unsigned long var1, var2;
                 unsigned long prev = 0;
 
-                for (size_t s = 0; s < size(_hash); s++)
+                for (size_t s = 0; s < std::size(_hash); s++)
                 {
                     var1 = static_cast<unsigned char>(_hash[s]) + ((prev << 4) | (prev >> (sizeof(prev) * 8 - 4)));
                     var2 = var1 & c;
@@ -2671,7 +2847,7 @@ namespace Framework {
         template<typename T> class TFile
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
         public:
             //
             // Чтение файла целиком
@@ -2684,8 +2860,10 @@ namespace Framework {
             //          Если возникла ошибка то first равен nullptr, second равен 0.
             //          Переменная error содержит описание ошибки
             //
-            static pair<shared_ptr<char>, size_t> ReadAll(const stdfs::path& path, T& error, const locale& loc = locale())
+            static std::pair<std::shared_ptr<char>, size_t> ReadAll(const stdfs::path& path, T& error, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 error = String::TConverter<T>::EmptyString();
 
                 if (stdfs::exists(path))
@@ -2740,27 +2918,27 @@ namespace Framework {
             //
             // Список групп
             //
-            virtual void GetGroups(vector<string>& groups) = 0;
+            virtual void GetGroups(std::vector<std::string>& groups) = 0;
             //
             // Метод возвращает дескриптор группы
             //
-            virtual void* GetGroup(const string& group, bool create, const locale& loc) = 0;
+            virtual void* GetGroup(const std::string& group, bool create, const std::locale& loc) = 0;
             //
             // Метод возвращает список параметров в группе
             //
-            virtual void GetValues(void* group_handle, vector<pair<string, string>>& values) = 0;
+            virtual void GetValues(void* group_handle, std::vector<std::pair<std::string, std::string>>& values) = 0;
             //
             // Метод возвращает параметр группы
             //
-            virtual string* GetValue(void* group_handle, const string& key, const locale& loc) = 0;
+            virtual std::string* GetValue(void* group_handle, const std::string& key, const std::locale& loc) = 0;
             //
             // Метод добавляет параметр в группу (даже если он существует)
             //
-            virtual void AddValue(void* group_handle, const string& key, const string& value, const locale& loc) = 0;
+            virtual void AddValue(void* group_handle, const std::string& key, const std::string& value, const std::locale& loc) = 0;
             //
             // Метод записывает параметр в группу, если параметр уже существует, объединяет значение
             //
-            virtual void MergeValue(void* group_handle, const string& key, const string& value, const locale& loc) = 0;
+            virtual void MergeValue(void* group_handle, const std::string& key, const std::string& value, const std::locale& loc) = 0;
         };
         //
         // Шаблон реализует интерфейс TIniBaseInterface, операции поиска и сравнения идут со строками
@@ -2768,26 +2946,31 @@ namespace Framework {
         template <typename T = std::string> class TIniStringStorage : public TIniBaseInterface<T>
         {
         private:
-            using TKeyValueList = vector<pair<string, string>>;
-            using TGroup        = pair<string, TKeyValueList>;
+            using TKeyValueList = std::vector<std::pair<std::string, std::string>>;
+            using TGroup        = std::pair<std::string, TKeyValueList>;
 
         protected:
-            vector<TGroup> ini; // ini файла
+            std::vector<TGroup> ini; // ini файла
 
         public:
             //
             // Список групп
             //
-            void GetGroups(vector<string>& groups) override
+            void GetGroups(std::vector<std::string>& groups) override
             {
+                using namespace std;
+
                 groups.resize(size(ini));
+
                 transform(begin(ini), end(ini), begin(groups), [] (const TGroup& value) { return value.first; });
             }
             //
             // Метод возвращает дескриптор группы
             //
-            void* GetGroup(const string& group, bool create, const locale& loc = locale()) override
+            void* GetGroup(const std::string& group, bool create, const std::locale& loc = std::locale()) override
             {
+                using namespace std;
+
                 if (auto group_it = find_if(begin(ini), end(ini), [&group, &loc](const TGroup& value) { return String::TExtension<string>::Compare(group, value.first, true, loc); }); group_it != end(ini))
                 {
                     return &(group_it->second);
@@ -2803,7 +2986,7 @@ namespace Framework {
             //
             // Метод возвращает список параметров в группе
             //
-            void GetValues(void* group_handle, vector<pair<string, string>>& values) override
+            void GetValues(void* group_handle, std::vector<std::pair<std::string, std::string>>& values) override
             {
                 if (TKeyValueList* key_value_list(static_cast<TKeyValueList*>(group_handle)); key_value_list)
                 {
@@ -2817,8 +3000,10 @@ namespace Framework {
             //
             // Метод возвращает параметр группы
             //
-            string* GetValue(void* group_handle, const string& key, const locale& loc = locale()) override
+            std::string* GetValue(void* group_handle, const std::string& key, const std::locale& loc = std::locale()) override
             {
+                using namespace std;
+
                 if (TKeyValueList* key_value_list(static_cast<TKeyValueList*>(group_handle)); key_value_list)
                 {
                     if (auto key_value_it = find_if(begin(*key_value_list), end(*key_value_list), [&key, &loc](const pair<string, string>& value) { return String::TExtension<string>::Compare(value.first, key, true, loc); }); key_value_it != end(*key_value_list))
@@ -2832,18 +3017,20 @@ namespace Framework {
             //
             // Метод добавляет параметр в группу (даже если он существует)
             //
-            void AddValue(void* group_handle, const string& key, const string& value, const locale& loc = locale()) override
+            void AddValue(void* group_handle, const std::string& key, const std::string& value, const std::locale& loc = std::locale()) override
             {
                 if (TKeyValueList* key_value_list(static_cast<TKeyValueList*>(group_handle)); key_value_list)
                 {
-                    key_value_list->push_back(pair(key, value));
+                    key_value_list->push_back(std::pair(key, value));
                 }
             }
             //
             // Метод записывает параметр в группу, если параметр уже существует, объединяет значение
             //
-            void MergeValue(void* group_handle, const string& key, const string& value, const locale& loc = locale()) override
+            void MergeValue(void* group_handle, const std::string& key, const std::string& value, const std::locale& loc = std::locale()) override
             {
+                using namespace std;
+
                 if (string* _value = GetValue(group_handle, key, loc); _value)
                 {
                     *_value = value;
@@ -2860,35 +3047,38 @@ namespace Framework {
         template <typename T = std::string> class TIniHashStorage : public TIniBaseInterface<T>
         {
         private:
-            struct TKeyValue { string name; uint32_t hash; string value; };
+            struct TKeyValue { std::string name; uint32_t hash; std::string value; };
 
-            using TKeyValueList = vector<TKeyValue>;
+            using TKeyValueList = std::vector<TKeyValue>;
 
-            struct TGroup { string name; uint32_t hash; TKeyValueList key_value_list; };
+            struct TGroup { std::string name; uint32_t hash; TKeyValueList key_value_list; };
 
         protected:
-            vector<TGroup> ini; // ini файла
+            std::vector<TGroup> ini; // ini файла
             //
             // Формирование HASH суммы
             //
-            uint32_t MakeHash(const string& value, const locale& loc = locale())
+            uint32_t MakeHash(const std::string& value, const std::locale& loc = std::locale())
             {
-                return Crypto::TCRC<string>::UPPER_HASH32(value, loc);
+                return Crypto::TCRC<std::string>::UPPER_HASH32(value, loc);
             }
 
         public:
             //
             // Список групп
             //
-            void GetGroups(vector<string>& groups) override
+            void GetGroups(std::vector<std::string>& groups) override
             {
+                using namespace std;
+
                 groups.resize(size(ini));
+
                 std::transform(begin(ini), end(ini), begin(groups), [] (const TGroup& value) { return value.name; });
             }
             //
             // Метод возвращает дескриптор группы
             //
-            void* GetGroup(const string& group, bool create, const locale& loc = locale()) override
+            void* GetGroup(const std::string& group, bool create, const std::locale& loc = std::locale()) override
             {
                 uint32_t group_hash(MakeHash(group, loc));
                 //
@@ -2909,12 +3099,12 @@ namespace Framework {
             //
             // Метод возвращает список параметров в группе
             //
-            void GetValues(void* group_handle, vector<pair<string, string>>& values) override
+            void GetValues(void* group_handle, std::vector<std::pair<std::string, std::string>>& values) override
             {
                 if (TKeyValueList* key_value_list(static_cast<TKeyValueList*>(group_handle)); key_value_list)
                 {
                     values.resize(size(*key_value_list));
-                    transform(begin(*key_value_list), end(*key_value_list), begin(values), [](const TKeyValue& _value) { return pair(_value.name, _value.value); });
+                    transform(begin(*key_value_list), end(*key_value_list), begin(values), [](const TKeyValue& _value) { return std::pair(_value.name, _value.value); });
                 }
                 else
                 {
@@ -2924,7 +3114,7 @@ namespace Framework {
             //
             // Метод возвращает параметр группы
             //
-            string* GetValue(void* group_handle, const string& key, const locale& loc = locale()) override
+            std::string* GetValue(void* group_handle, const std::string& key, const std::locale& loc = std::locale()) override
             {
                 if (TKeyValueList* key_value_list(static_cast<TKeyValueList*>(group_handle)); key_value_list)
                 {
@@ -2941,7 +3131,7 @@ namespace Framework {
             //
             // Метод добавляет параметр в группу (даже если он существует)
             //
-            void AddValue(void* group_handle, const string& key, const string& value, const locale& loc = locale()) override
+            void AddValue(void* group_handle, const std::string& key, const std::string& value, const std::locale& loc = std::locale()) override
             {
                 if (TKeyValueList* key_value_list(static_cast<TKeyValueList*>(group_handle)); key_value_list)
                 {
@@ -2951,8 +3141,10 @@ namespace Framework {
             //
             // Метод записывает параметр в группу, если параметр уже существует, объединяет значение
             //
-            void MergeValue(void* group_handle, const string& key, const string& value, const locale& loc = locale()) override
+            void MergeValue(void* group_handle, const std::string& key, const std::string& value, const std::locale& loc = std::locale()) override
             {
+                using namespace std;
+
                 if (string* _value = GetValue(group_handle, key, loc); _value)
                 {
                     *_value = value;
@@ -2969,18 +3161,20 @@ namespace Framework {
         template <typename T, typename StorageClass = TIniStringStorage<T>> class TIniBase
         {
         private:
-            static_assert(is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
 
         protected:
-            unique_ptr<TIniBaseInterface<T>> base_interface = make_unique<StorageClass>();
+            std::unique_ptr<TIniBaseInterface<T>> base_interface = std::make_unique<StorageClass>();
 
         public:
             //
             // Чтение списка групп ini файла
             //
-            void GetGroups(vector<T>& groups, const locale& loc = locale())
+            void GetGroups(std::vector<T>& groups, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // std::string
+                using namespace std;
+
+                if constexpr(Constexpr::is_string<T>) // std::string
                 {
                     base_interface->GetGroups(groups);
                 }
@@ -3001,9 +3195,11 @@ namespace Framework {
             //
             // Чтение списка параметров в группе
             //
-            bool GetValues(const T& group, vector<pair<T, T>>& key_value, const locale& loc = locale())
+            bool GetValues(const T& group, std::vector<std::pair<T, T>>& key_value, const std::locale& loc = std::locale())
             {
-                if constexpr(is_string<T>) // std::string
+                using namespace std;
+
+                if constexpr(Constexpr::is_string<T>) // std::string
                 {
                     if (void* group_handle(base_interface->GetGroup(group, false, loc)); group_handle)
                     {
@@ -3041,11 +3237,14 @@ namespace Framework {
             //
             // Чтение параметров ini файла
             //
-            template<typename Type = T> Type GetValue(const T& group, const T& key, const Type& def, bool def_if_empty = false, const locale& loc = locale())
+            template<typename Type = T> Type GetValue(const T& group, const T& key, const Type& def, bool def_if_empty = false, const std::locale& loc = std::locale())
             {
+                using namespace std;
+                using namespace Constexpr;
+
                 string _group, _key;
 
-                if constexpr(is_wstring<T>)
+                if constexpr(Constexpr::is_wstring<T>)
                 {
                     _group  = String::TConverter<string>::ToString(group, loc);
                     _key    = String::TConverter<string>::ToString(key, loc);
@@ -3076,11 +3275,13 @@ namespace Framework {
             //
             // Чтение параметров ini файла, путь
             //
-            stdfs::path GetValue(const T& group, const T& key, const stdfs::path& def, bool def_if_empty = false, const locale& loc = locale())
+            stdfs::path GetValue(const T& group, const T& key, const stdfs::path& def, bool def_if_empty = false, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 basic_string<typename T::value_type, std::char_traits<typename T::value_type>, std::allocator<typename T::value_type>> def_path;
 
-                if constexpr(is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     def_path = def.string();
                 }
@@ -3094,13 +3295,16 @@ namespace Framework {
             //
             // Запись параметра в ini файл
             //
-            template<typename Type = T> void SetValue(const T& group, const T& key, const Type& value, const locale& loc = locale())
+            template<typename Type = T> void SetValue(const T& group, const T& key, const Type& value, const std::locale& loc = std::locale())
             {
+                using namespace std;
+                using namespace Constexpr;
+
                 string _group, _key, _value;
                 //
                 // Группа и параметр
                 //
-                if constexpr(is_wstring<T>)
+                if constexpr(Constexpr::is_wstring<T>)
                 {
                     _group  = String::TConverter<string>::ToString(group, loc);
                     _key    = String::TConverter<string>::ToString(key, loc);
@@ -3136,11 +3340,11 @@ namespace Framework {
             //
             // Запись параметра в ini файл, путь
             //
-            void SetValue(const T& group, const T& key, const stdfs::path& value, const locale& loc = locale())
+            void SetValue(const T& group, const T& key, const stdfs::path& value, const std::locale& loc = std::locale())
             {
-                basic_string<typename T::value_type, std::char_traits<typename T::value_type>, std::allocator<typename T::value_type>> str_path;
+                std::basic_string<typename T::value_type, std::char_traits<typename T::value_type>, std::allocator<typename T::value_type>> str_path;
 
-                if constexpr(is_string<T>)
+                if constexpr(Constexpr::is_string<T>)
                 {
                     str_path = value.string();
                 }
@@ -3161,8 +3365,10 @@ namespace Framework {
             //
             // Разбор ini файла
             //
-            bool Parse(const stdfs::path& path, T& error, const locale& loc = locale())
+            bool Parse(const stdfs::path& path, T& error, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 if (stdfs::exists(path))
                 {
                     if (ifstream ini_file(path.string(), ios::in); ini_file.is_open())
@@ -3268,8 +3474,10 @@ namespace Framework {
             //
             // Запись ini файла
             //
-            bool Write(const stdfs::path& path, T& error, const locale& loc = locale())
+            bool Write(const stdfs::path& path, T& error, const std::locale& loc = std::locale())
             {
+                using namespace std;
+
                 if (ofstream ini_file(path.string(), ios::out | ios::trunc); ini_file.is_open())
                 {
                     vector<string> groups;
@@ -3303,14 +3511,14 @@ namespace Framework {
             }
         };
 
-        using TStringIniBase = TIniBase<string, TIniStringStorage<string>>;
-        using TWStringIniBase = TIniBase<wstring, TIniStringStorage<wstring>>;
+        using TStringIniBase = TIniBase<std::string, TIniStringStorage<std::string>>;
+        using TWStringIniBase = TIniBase<std::wstring, TIniStringStorage<std::wstring>>;
 
-        using TStringIniReader = TIniReader<string, TIniStringStorage<string>>;
-        using TWStringIniReader = TIniReader<wstring, TIniStringStorage<wstring>>;
+        using TStringIniReader = TIniReader<std::string, TIniStringStorage<std::string>>;
+        using TWStringIniReader = TIniReader<std::wstring, TIniStringStorage<std::wstring>>;
 
-        using TStringIniWrite = TIniWriter<string, TIniStringStorage<string>>;
-        using TWStringIniWrite = TIniWriter<wstring, TIniStringStorage<wstring>>;
+        using TStringIniWrite = TIniWriter<std::string, TIniStringStorage<std::string>>;
+        using TWStringIniWrite = TIniWriter<std::wstring, TIniStringStorage<std::wstring>>;
     }
 }
 // ---------------------------------------------------------------------------
