@@ -2284,7 +2284,7 @@ namespace Framework {
                 //
                 // Ожидание потока, миллисекунды
                 //
-                static void Sleep(uint32_t milliseconds)
+                static void Sleep(std::size_t milliseconds)
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
                 }
