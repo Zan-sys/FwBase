@@ -1245,6 +1245,23 @@ TEST(TFormater, Format)
     }
 }
 // ---------------------------------------------------------------------------
+TEST(TFormater, LocalTime)
+{
+    std::locale _locale(locale_name);
+    {
+        std::string date_time("");
+        ASSERT_TRUE(date_time.empty());
+        date_time = TSFormater::LocalTime("%c %Z", _locale);
+        ASSERT_FALSE(date_time.empty());
+    }
+    {
+        std::wstring date_time(L"");
+        ASSERT_TRUE(date_time.empty());
+        date_time = TWFormater::LocalTime(L"%c %Z", _locale);
+        ASSERT_FALSE(date_time.empty());
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(TSFormater, Concatenate)
 {
     //

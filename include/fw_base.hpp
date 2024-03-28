@@ -742,7 +742,7 @@ namespace Framework {
 
                 std::basic_stringstream<typename T::value_type> stream;
 
-                stream << put_time(&_tm, format.c_str());
+                stream << std::put_time(&_tm, format.c_str());
 
                 return stream.str();
             }
