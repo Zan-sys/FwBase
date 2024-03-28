@@ -3740,6 +3740,250 @@ TEST(StdExtension, TSafeMemoryPool)
         ASSERT_EQ(temp, stings.at(i));
     }
 }
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueTrue)
+{
+    std::size_t num_elemets(100);
+    Framework::StdExtension::Threading::TSafeArrayQueue<std::size_t> queue(num_elemets);
+    //
+    // Формирование проверочных данных
+    //
+    std::vector<std::vector<std::size_t>> expected_result;
+    for (size_t i(0); i < 10; i++)
+    {
+        expected_result.push_back(std::vector<std::size_t> (num_elemets, i));
+    }
+    //
+    // Проверка некоторых методов очереди
+    //
+    ASSERT_TRUE(queue.IsEmpty());
+    ASSERT_FALSE(queue.IsFull());
+    ASSERT_EQ(queue.Size(), std::size_t(0));
+    ASSERT_EQ(queue.DataSize(), num_elemets * sizeof(std::size_t));
+
+    std::thread _thread([&]()
+    {
+        Framework::StdExtension::Threading::TBaseThread::Sleep(100);
+
+        for (std::size_t i(0); i < std::size(expected_result); i++)
+        {
+            queue.Push(std::data(expected_result.at(i)), std::size(expected_result.at(i)) * sizeof(std::size_t));
+            Framework::StdExtension::Threading::TBaseThread::Sleep(100 * i);
+        }
+    });
+
+    std::vector<std::size_t> buffer(num_elemets, 0);
+
+
+    for (size_t i(0); i < expected_result.size(); i++)
+    {
+        ASSERT_TRUE(queue.Pop(buffer.data(), buffer.size() * sizeof(std::size_t)));
+        ASSERT_TRUE(memcmp(buffer.data(), expected_result.at(i).data(), buffer.size() * sizeof(std::size_t)) == 0);
+    }
+
+    _thread.join();
+
+    ASSERT_TRUE(queue.IsEmpty());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueSize)
+{
+    std::size_t num_elemets(100);
+    {
+        Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets, num_elemets);
+
+        ASSERT_TRUE(queue.IsEmpty());
+        ASSERT_FALSE(queue.IsFull());
+        ASSERT_EQ(queue.DataSize(), num_elemets);
+        ASSERT_EQ(queue.MaxSize(), num_elemets);
+    }
+    {
+        Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets, 0);
+
+        ASSERT_TRUE(queue.IsEmpty());
+        ASSERT_FALSE(queue.IsFull());
+        ASSERT_EQ(queue.DataSize(), num_elemets);
+        ASSERT_EQ(queue.MaxSize(), (std::numeric_limits<size_t>::max)());
+    }
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueFirst)
+{
+    std::size_t num_elemets(100);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets);
+
+    std::vector<int8_t> buffer(num_elemets, -50);
+
+    ASSERT_TRUE(queue.IsEmpty());
+
+    ASSERT_FALSE(queue.First(buffer.data(), buffer.size()));
+
+    ASSERT_TRUE(queue.Push(buffer.data(), buffer.size()));
+
+    ASSERT_FALSE(queue.First(buffer.data(), buffer.size() - 1));
+
+    ASSERT_TRUE(queue.First(buffer.data(), buffer.size()));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueFalse01)
+{
+    std::size_t num_elemets(100);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets);
+
+    std::vector<int8_t> buffer(num_elemets * 2, 50);
+
+    ASSERT_FALSE(queue.Push(buffer.data(), buffer.size()));
+
+    ASSERT_GE(buffer.size(), num_elemets);
+
+    ASSERT_TRUE(queue.Push(buffer.data(), num_elemets));
+
+    ASSERT_FALSE(queue.Pop(buffer.data(), num_elemets -1));
+
+    ASSERT_TRUE(queue.Pop(buffer.data(), buffer.size()));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueFalse02)
+{
+    std::size_t num_elemets(100);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets);
+
+    std::vector<int8_t> buffer(num_elemets, 50);
+
+    ASSERT_FALSE(queue.Pop(buffer.data(), buffer.size(), 1000));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueFalse03)
+{
+    std::size_t num_elemets(100);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets);
+
+    std::vector<int8_t> buffer(num_elemets, 50);
+
+    ASSERT_FALSE(queue.Pop(buffer.data(), buffer.size(), 1000));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueueFalse04)
+{
+    std::size_t num_elemets(100);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets, 1);
+
+    ASSERT_EQ(queue.MaxSize(), std::size_t(1));
+
+    std::vector<int8_t> buffer(num_elemets, 50);
+
+    ASSERT_TRUE(queue.Push(buffer.data(), buffer.size(), 1000));
+
+    ASSERT_TRUE(queue.IsFull());
+
+    ASSERT_FALSE(queue.IsEmpty());
+
+    ASSERT_FALSE(queue.Push(buffer.data(), buffer.size(), 1000));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBuffer01)
+{
+    std::vector<int8_t> buffer(100, -1);
+
+    std::vector<int8_t> read_buffer(buffer.size() , 0);
+
+    ASSERT_EQ(buffer.size(), read_buffer.size());
+
+    ASSERT_FALSE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+
+    Framework::StdExtension::Threading::TSafeBuffer<int8_t> safe_buffer(buffer.size(), -1);
+
+    ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size()));
+
+    ASSERT_TRUE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBuffer02)
+{
+    std::vector<uint8_t> buffer(100);
+
+    Framework::StdExtension::FOR_EACH(std::begin(buffer), std::end(buffer), [] (std::size_t index, uint8_t& value) {
+        value = static_cast<uint8_t>(index);
+    });
+
+    std::vector<int8_t> read_buffer(buffer.size() , 0);
+
+    ASSERT_EQ(buffer.size(), read_buffer.size());
+
+    ASSERT_FALSE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+
+    uint8_t index(0);
+
+    Framework::StdExtension::Threading::TSafeBuffer<uint8_t> safe_buffer(buffer.size(), [&index](uint8_t& value) {
+        value = index;
+        index++;
+    });
+
+    ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size()));
+
+    ASSERT_TRUE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBufferWrite)
+{
+    std::vector<uint8_t> buffer(100, 0);
+
+    Framework::StdExtension::Threading::TSafeBuffer<int8_t> safe_buffer(buffer.size() - 1);
+
+    ASSERT_FALSE(safe_buffer.Write(buffer.data(), buffer.size()));
+
+    ASSERT_TRUE(safe_buffer.Write(buffer.data(), buffer.size() - 1));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBufferRead)
+{
+    std::vector<uint8_t> buffer(100, 0);
+
+    Framework::StdExtension::Threading::TSafeBuffer<int8_t> safe_buffer(buffer.size(), 0);
+
+    ASSERT_FALSE(safe_buffer.Read(buffer.data(), buffer.size() -1));
+
+    ASSERT_TRUE(safe_buffer.Read(buffer.data(), buffer.size()));
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBufferWriteRead)
+{
+    std::vector<uint8_t> buffer(100, -1);
+
+    std::vector<uint8_t> read_buffer(buffer.size(), 0);
+
+    ASSERT_EQ(buffer.size(), read_buffer.size());
+
+    ASSERT_FALSE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+
+    Framework::StdExtension::Threading::TSafeBuffer<int8_t> safe_buffer(buffer.size());
+
+    ASSERT_EQ(buffer.size(), safe_buffer.BufferSize());
+
+    ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size()));
+
+    ASSERT_FALSE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+
+    ASSERT_TRUE(safe_buffer.Write(buffer.data(), buffer.size()));
+
+    ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size()));
+
+    ASSERT_TRUE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBufferSize)
+{
+    std::vector<double> buffer(100);
+
+    Framework::StdExtension::Threading::TSafeBuffer<double> safe_buffer(buffer.size());
+
+    ASSERT_EQ(buffer.size() * sizeof(double), safe_buffer.BufferSize());
+}
 #pragma endregion
 // ---------------------------------------------------------------------------
 #pragma region Crypto

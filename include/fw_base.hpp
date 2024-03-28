@@ -1,5 +1,5 @@
 /*
-    Версия 4 от 2024.03.26 автор ZAN
+    Версия 5 от 2024.03.28 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -2393,14 +2393,11 @@ namespace Framework {
                 //
                 // Конструктор
                 //
-                TSafeQueue(size_t _max_items) : max_items(_max_items), read_semaphore(0), write_semaphore(_max_items)
-                {
-                    if (max_items == 0)
-                    {
-                        max_items = (std::numeric_limits<size_t>::max)();
-                    }
-                }
-
+                TSafeQueue(size_t _max_items) :
+                    max_items(_max_items == 0 ? (std::numeric_limits<size_t>::max)() : _max_items),
+                    read_semaphore(0),
+                    write_semaphore(_max_items == 0 ? (std::numeric_limits<size_t>::max)() : _max_items)
+                    {}
                 //
                 // Деструктор
                 //
@@ -2412,7 +2409,7 @@ namespace Framework {
                 //
                 // Запись данных в очередь
                 //
-                bool Push(const T& data, size_t ms_wait = (std::numeric_limits<size_t>::max)())
+                bool Push(const T& data, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
                 {
                     if (ms_wait == (std::numeric_limits<size_t>::max)())
                     {
@@ -2429,6 +2426,7 @@ namespace Framework {
 
                         read_semaphore.Release();
                     }
+
                     return true;
                 }
 
@@ -2450,7 +2448,7 @@ namespace Framework {
                         {
                             std::lock_guard<decltype(locker)> lg(locker);
 
-                            if (queue.empty()) 
+                            if (queue.empty())
                             {
                                 continue;
                             }
@@ -2486,11 +2484,16 @@ namespace Framework {
                 //
                 // Количество элементов в очереди
                 //
-                size_t Size()
+                std::size_t Size()
                 {
                     std::lock_guard<decltype(locker)> lg(locker);
                     return std::size(queue);
                 }
+
+                //
+                // Максимальное количество элементов в очереди
+                //
+                std::size_t MaxSize() { return max_items; }
 
                 //
                 // Пустая очередь или нет
@@ -2513,7 +2516,7 @@ namespace Framework {
                 //
                 // Очистка очереди
                 //
-                void Clear()
+                void Clear(std::function<void(T)> data_routine = nullptr)
                 {
                    std::lock_guard<decltype(locker)> lg(locker);
 
@@ -2521,6 +2524,11 @@ namespace Framework {
 
                     while(!queue.empty())
                     {
+                        if (data_routine)
+                        {
+                            data_routine(queue.front());
+                        }
+
                         queue.pop_front();
                     }
 
@@ -2532,16 +2540,16 @@ namespace Framework {
             //
             // Пул памяти
             //
-            template <typename T = char> class TSafeMemoryPool
+            template <typename T = int8_t> class TSafeMemoryPool
             {
                 private:
-                    std::mutex locker;          // Обеспечивает монопольный доступ к данным класса
+                    std::mutex locker;              // Обеспечивает монопольный доступ к данным класса
 
-                    std::size_t _num_elements;        // Количество элементов в одном блоке памяти
+                    std::size_t _num_elements;      // Количество элементов в одном блоке памяти
 
-                    std::deque<T*> all_mem_blocks;   // Список всех блоков памяти
+                    std::deque<T*> all_mem_blocks;  // Список всех блоков памяти
 
-                    std::deque<T*> used_mem_blocks;  // Список используемых блоков памяти
+                    std::deque<T*> used_mem_blocks; // Список используемых блоков памяти
 
                     //
                     // Инициализация нового блока памяти
@@ -2566,7 +2574,7 @@ namespace Framework {
                     //
                     // Конструктор
                     //
-                    TSafeMemoryPool(std::size_t num_elements) : _num_elements(num_elements) {}
+                    TSafeMemoryPool(std::size_t num_elements) : _num_elements(num_elements == 0 ? 1 : num_elements) {}
 
                     //
                     // Деструктор
@@ -2650,6 +2658,222 @@ namespace Framework {
                             }
                         }
                     }
+
+                    //
+                    // Количество элементов в блоке памяти
+                    //
+                    std::size_t NumElements() { return _num_elements; }
+
+                    //
+                    // Размер блока памяти в байтах
+                    //
+                    std::size_t SizeMemBlock() { return _num_elements * sizeof(T); }
+            };
+
+            //
+            // Безопасная очередь для передачи массива данных
+            //
+            template <typename T = int8_t> class TSafeArrayQueue : private TSafeQueue<T*>
+            {
+            private:
+                TSafeMemoryPool<T> mem_pool;    // Пул для управления памятью
+
+            public:
+                //
+                // Конструктор
+                //
+                TSafeArrayQueue(std::size_t num_elemets) : TSafeArrayQueue(num_elemets, (std::numeric_limits<size_t>::max)()) {}
+
+                //
+                // Конструктор
+                //
+                TSafeArrayQueue(std::size_t num_elemets, size_t max_items) : TSafeQueue<T*>(max_items), mem_pool(num_elemets) {}
+
+                //
+                // Деструктор
+                //
+                ~TSafeArrayQueue() {}
+
+                //
+                // Запись данных в очередь
+                //
+                bool Push(const void* data, std::size_t data_size, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
+                {
+                    if (data && (data_size <= mem_pool.SizeMemBlock()))
+                    {
+                        T* mem_block = mem_pool.New();
+
+                        std::memcpy(mem_block, data, data_size);
+
+                        if (TSafeQueue<T*>::Push(mem_block, ms_wait))
+                        {
+                            return true;
+                        }
+
+                        mem_pool.Delete(mem_block);
+                    }
+
+                    return false;
+                }
+
+                //
+                // Чтение данных из очереди
+                //
+                bool Pop(void* data, std::size_t data_size, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
+                {
+                    if (data && (data_size >= mem_pool.SizeMemBlock()))
+                    {
+                        if (T* mem_block(nullptr); TSafeQueue<T*>::Pop(mem_block, ms_wait) && mem_block)
+                        {
+                            std::memcpy(data, mem_block, mem_pool.SizeMemBlock());
+
+                            mem_pool.Delete(mem_block);
+
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                //
+                // Чтение данных из очереди без удаления элемента
+                //
+                bool First(void* data, std::size_t data_size)
+                {
+                    if (data && (data_size >= mem_pool.SizeMemBlock()))
+                    {
+                        if (T* mem_block(nullptr); TSafeQueue<T*>::First(mem_block) && mem_block)
+                        {
+                            std::memcpy(data, mem_block, mem_pool.SizeMemBlock());
+
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                //
+                // Количество элементов в очереди
+                //
+                using TSafeQueue<T*>::Size;
+
+                //
+                // Максимальное количество элементов в очереди
+                //
+                using TSafeQueue<T*>::MaxSize;
+
+                //
+                // Пустая очередь или нет
+                //
+                using TSafeQueue<T*>::IsEmpty;
+
+                //
+                // Полная очередь или нет
+                //
+                using TSafeQueue<T*>::IsFull;
+
+                //
+                // Очистка очереди
+                //
+                void Clear() { TSafeQueue<T*>::Clear([this](T* mem_block) { mem_pool.Delete(mem_block); }); }
+
+                //
+                // Размер в байтах одного блока
+                //
+                std::size_t DataSize() { return mem_pool.SizeMemBlock(); }
+            };
+
+            //
+            // Безопасный буфер
+            //
+            template <typename T = int8_t> class TSafeBuffer
+            {
+            private:
+                std::mutex locker;          // Обеспечивает монопольный доступ к данным класса
+                std::vector<T> buffer;      // Буфер для хранения данных
+                std::size_t buffer_size;    // Размер буфера в байтах
+
+            public:
+                //
+                // Конструктор
+                //
+                TSafeBuffer(std::size_t num_elemets)
+                {
+                    num_elemets = num_elemets == 0 ? 1 : num_elemets;
+
+                    buffer.resize(num_elemets);
+
+                    buffer_size = num_elemets * sizeof(T);
+                }
+
+                //
+                // Конструктор
+                //
+                TSafeBuffer(std::size_t num_elemets, const T& value)
+                {
+                    num_elemets = num_elemets == 0 ? 1 : num_elemets;
+
+                    buffer.resize(num_elemets, value);
+
+                    buffer_size = num_elemets * sizeof(T);
+                }
+
+                //
+                // Конструктор
+                //
+                TSafeBuffer(std::size_t num_elemets, std::function<void(T&)> data_routine) : TSafeBuffer(num_elemets)
+                {
+                    if (data_routine)
+                    {
+                        std::for_each(std::begin(buffer), std::end(buffer), data_routine);
+                    }
+                }
+
+                //
+                // Деструктор
+                //
+                ~TSafeBuffer() {}
+
+                //
+                // Запись данных в очередь
+                //
+                bool Write(const void* data, std::size_t data_size)
+                {
+                    if (data && (data_size <= buffer_size))
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+
+                        std::memcpy(std::data(buffer), data, data_size);
+
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                //
+                // Чтение данных из буфера
+                //
+                bool Read(void* data, std::size_t data_size)
+                {
+                    if (data && (data_size >= buffer_size))
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+
+                        std::memcpy(data, std::data(buffer), buffer_size);
+
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                //
+                // Размер в байтах одного блока
+                //
+                std::size_t BufferSize() { return buffer_size; }
             };
         }
     }
