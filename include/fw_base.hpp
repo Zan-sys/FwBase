@@ -1,5 +1,5 @@
 /*
-    Версия 5 от 2024.03.28 автор ZAN
+    Версия 6 от 2024.04.04 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -421,6 +421,20 @@ namespace Framework {
 
                     result.shrink_to_fit();
                     return result;
+                }
+            }
+            //
+            // stdfs::path to std::wstring to u16string
+            //
+            static T ToString(const stdfs::path& value, const std::locale& loc = std::locale())
+            {
+                if constexpr(Constexpr::is_string<T>) // Return std::string
+                {
+                    return value.string();
+                }
+                else // Return std::wstring
+                {
+                    return value.wstring();
                 }
             }
             //

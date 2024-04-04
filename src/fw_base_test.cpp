@@ -475,6 +475,20 @@ TEST(TConverter, ToU16StringString)
     }
 }
 // ---------------------------------------------------------------------------
+TEST(TConverter, ToStringPath)
+{
+    {
+        std::string value(stdfs::current_path().string());
+        std::string result(TSConverter::ToString(stdfs::current_path()));
+        ASSERT_EQ(value, result);
+    }
+    {
+        std::wstring value(stdfs::current_path().wstring());
+        std::wstring result(TWConverter::ToString(stdfs::current_path()));
+        ASSERT_EQ(value, result);
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(TConverter, ToHexString)
 {
     //
