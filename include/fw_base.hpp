@@ -1,5 +1,5 @@
 /*
-    Версия 6 от 2024.04.04 автор ZAN
+    Версия 7 от 2024.04.12 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -3082,7 +3082,7 @@ namespace Framework {
         //
         // Шаблон содержит методы для работы с файлом
         //
-        template<typename T> class TFile
+        template <typename T> class TFile
         {
         private:
             static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
@@ -3137,6 +3137,65 @@ namespace Framework {
                 }
 
                 return pair(nullptr, 0);
+            }
+        };
+        //
+        // Шаблон содержит методы для работы с директориями
+        //
+        template <typename T> class TDirectory
+        {
+        private:
+            static_assert(Constexpr::is_string_wstring<T>, "This template requires the type std::string or std::wstring.");
+        public:
+            //
+            // Получение списка файлов в директории
+            // Входные параметры:
+            //      directory_path - путь к директории
+            //      result - список файлов в директории
+            //      regx_mask - регулярное выражение, по которому будут выбираться имена файлов (если пустое, берётся всё содержимое)
+            //      regx_mask_icase - если true не учитывать регистр в регулярном выражении regx_mask, false - учитывать регистр символов
+            // Результат:
+            //      true - удалось получить содержимое директории, иначе false
+            //
+            static bool GetFiles(const stdfs::path& directory_path, std::vector<stdfs::path>& result, const T& regx_mask = T(), bool regx_mask_icase = true)
+            {
+                using TPattern = std::basic_regex<typename T::value_type>;
+
+                result.clear();
+
+                if (stdfs::exists(directory_path) && stdfs::is_directory(directory_path))
+                {
+                    std::unique_ptr<TPattern> pattern(nullptr);
+
+                    if (!regx_mask.empty())
+                    {
+                        if (regx_mask_icase) pattern = std::make_unique<TPattern>(regx_mask, std::regex_constants::icase);
+                        else pattern = std::make_unique<TPattern>(regx_mask);
+                    }
+
+                    for (auto const& dir_entry : stdfs::directory_iterator { directory_path })
+                    {
+                        if (stdfs::path file_path(dir_entry.path()); !dir_entry.is_directory())
+
+                        if (pattern)
+                        {
+                            T file_name = String::TConverter<T>::ToString(file_path.filename());
+
+                            if (std::regex_match(file_name, *pattern))
+                            {
+                                result.push_back(file_path);
+                            }
+                        }
+                        else
+                        {
+                            result.push_back(file_path);
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
             }
         };
         //

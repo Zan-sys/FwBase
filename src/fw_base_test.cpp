@@ -1,5 +1,6 @@
 // ---------------------------------------------------------------------------
 #include <gtest/gtest.h>
+// ---------------------------------------------------------------------------
 #include <fw_base.hpp>
 // ---------------------------------------------------------------------------
 //
@@ -37,8 +38,24 @@ using TWEncoding = Framework::String::TEncoding<std::wstring>;
 using TSSamePair = Framework::StdExtension::TSamePair<std::string>;
 using TWSamePair = Framework::StdExtension::TSamePair<std::wstring>;
 
+using TSDirectory = Framework::FileSystem::TDirectory<std::string>;
+using TWDirectory = Framework::FileSystem::TDirectory<std::wstring>;
+
 using TSCRC = Framework::Crypto::TCRC<std::string>;
 using TWCRC = Framework::Crypto::TCRC<std::wstring>;
+// ---------------------------------------------------------------------------
+stdfs::path app_path;
+// ---------------------------------------------------------------------------
+#pragma region main
+int main(int argc, char **argv)
+{
+    app_path = argv[0];
+
+    testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
+}
+#pragma endregion
 // ---------------------------------------------------------------------------
 #pragma region TConverter
 TEST(TConverter, ToStringCharPrt)
@@ -4718,6 +4735,94 @@ TEST(TCRC, InSysHASH)
 #pragma endregion
 // ---------------------------------------------------------------------------
 #pragma region FileSystem
+// ---------------------------------------------------------------------------
+TEST(FileSystem, TSDirectory_GetFiles01)
+{
+    std::vector<stdfs::path> files;
+
+    stdfs::path current_path(app_path.parent_path());
+
+    std::string app_name(TSConverter::ToString(app_path.filename()));
+
+    ASSERT_TRUE(files.empty());
+
+    ASSERT_TRUE(TSDirectory::GetFiles(current_path, files));
+
+    ASSERT_FALSE(files.empty());
+
+    ASSERT_FALSE(app_name.empty());
+
+    auto i_find = std::find_if(files.begin(), files.end(), [&app_name](const stdfs::path& value)
+    {
+        std::string temp(value.filename().string());
+        return TSExtension::Compare(temp, app_name);
+    });
+
+    ASSERT_TRUE(i_find != files.end());
+}
+// ---------------------------------------------------------------------------
+TEST(FileSystem, TSDirectory_GetFiles02)
+{
+    std::vector<stdfs::path> files;
+
+    stdfs::path current_path(app_path.parent_path());
+
+    std::string app_name(TSConverter::ToString(app_path.filename()));
+
+    ASSERT_TRUE(files.empty());
+
+    ASSERT_TRUE(TSDirectory::GetFiles(current_path, files, app_name, false));
+
+    ASSERT_TRUE(files.size() == 1);
+
+    ASSERT_FALSE(app_name.empty());
+
+    ASSERT_TRUE(app_name == files.front().filename().string());
+}
+// ---------------------------------------------------------------------------
+TEST(FileSystem, TWDirectory_GetFiles01)
+{
+    std::vector<stdfs::path> files;
+
+    stdfs::path current_path(app_path.parent_path());
+
+    std::wstring app_name(TWConverter::ToString(app_path.filename()));
+
+    ASSERT_TRUE(files.empty());
+
+    ASSERT_TRUE(TWDirectory::GetFiles(current_path, files));
+
+    ASSERT_FALSE(files.empty());
+
+    ASSERT_FALSE(app_name.empty());
+
+    auto i_find = std::find_if(files.begin(), files.end(), [&app_name](const stdfs::path& value)
+    {
+        std::wstring temp(value.filename().wstring());
+        return TWExtension::Compare(temp, app_name);
+    });
+
+    ASSERT_TRUE(i_find != files.end());
+}
+// ---------------------------------------------------------------------------
+TEST(FileSystem, TWDirectory_GetFiles02)
+{
+    std::vector<stdfs::path> files;
+
+    stdfs::path current_path(app_path.parent_path());
+
+    std::wstring app_name(TWConverter::ToString(app_path.filename()));
+
+    ASSERT_TRUE(files.empty());
+
+    ASSERT_TRUE(TWDirectory::GetFiles(current_path, files, app_name, false));
+
+    ASSERT_TRUE(files.size() == 1);
+
+    ASSERT_FALSE(app_name.empty());
+
+    ASSERT_TRUE(app_name == files.front().filename().wstring());
+}
 // ---------------------------------------------------------------------------
 //
 // Класс для тестирования методов класса TIniStringStorage
