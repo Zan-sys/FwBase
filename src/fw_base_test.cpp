@@ -2375,6 +2375,70 @@ TEST(TExtension, IsIP)
     }
 }
 // ---------------------------------------------------------------------------
+TEST(TExtension, IsGUID)
+{
+    //
+    // TSExtension
+    //
+    {
+        std::string guid_01("4ccf7cee-473e-4770-8764-23cb8a0d811d");
+        std::string guid_02("D3207EBF-0E08-49A5-AE7D-E9EDD0643820");
+        std::string guid_03("{91695405-08cc-4a21-b846-1c384983c2bd}");
+        std::string guid_04("{E5CF7677-7347-4773-9F2E-AB0BCA72DF1D}");
+        std::string guid_05("ed40b160-7376-4344-b8ce-28388b072eb-9"); // Ошибка
+        std::string guid_06("56a5482a-010-4f13-a63f-c4ca8de2f99f"); // Ошибка
+        std::string guid_07("{b1c8a80d-7a7a-4faf-9dca-66ac4aacf20}"); // Ошибка
+        std::string guid_08("c4a091ee-19e1-4b42-b51d-d6760fc89233}"); // Ошибка
+        std::string guid_09("{d6cf3fae-9c6f-4853-a464-96cf22ac6a8d"); // Ошибка
+        std::string guid_10("{ 79e92afe-53f9-44da-b54a-1e1e8a8e9681}"); // Ошибка
+        std::string guid_11("{0ac278e3-f8bb-4d9f9857-6df0b8ad29b3}"); // Ошибка
+        std::string guid_12("D86CEABE2FD6-4A94-820C-400B51147CB7"); // Ошибка
+
+        ASSERT_TRUE(TSExtension::IsGUID(guid_01));
+        ASSERT_TRUE(TSExtension::IsGUID(guid_02));
+        ASSERT_TRUE(TSExtension::IsGUID(guid_03));
+        ASSERT_TRUE(TSExtension::IsGUID(guid_04));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_05));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_06));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_07));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_08));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_09));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_10));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_11));
+        ASSERT_FALSE(TSExtension::IsGUID(guid_12));
+    }
+    //
+    // TWExtension
+    //
+    {
+        std::wstring guid_01(L"4ccf7cee-473e-4770-8764-23cb8a0d811d");
+        std::wstring guid_02(L"D3207EBF-0E08-49A5-AE7D-E9EDD0643820");
+        std::wstring guid_03(L"{91695405-08cc-4a21-b846-1c384983c2bd}");
+        std::wstring guid_04(L"{E5CF7677-7347-4773-9F2E-AB0BCA72DF1D}");
+        std::wstring guid_05(L"ed40b160-7376-4344-b8ce-28388b072eb-9"); // Ошибка
+        std::wstring guid_06(L"56a5482a-010-4f13-a63f-c4ca8de2f99f"); // Ошибка
+        std::wstring guid_07(L"{b1c8a80d-7a7a-4faf-9dca-66ac4aacf20}"); // Ошибка
+        std::wstring guid_08(L"c4a091ee-19e1-4b42-b51d-d6760fc89233}"); // Ошибка
+        std::wstring guid_09(L"{d6cf3fae-9c6f-4853-a464-96cf22ac6a8d"); // Ошибка
+        std::wstring guid_10(L"{ 79e92afe-53f9-44da-b54a-1e1e8a8e9681}"); // Ошибка
+        std::wstring guid_11(L"{0ac278e3-f8bb-4d9f9857-6df0b8ad29b3}"); // Ошибка
+        std::wstring guid_12(L"D86CEABE2FD6-4A94-820C-400B51147CB7"); // Ошибка
+
+        ASSERT_TRUE(TWExtension::IsGUID(guid_01));
+        ASSERT_TRUE(TWExtension::IsGUID(guid_02));
+        ASSERT_TRUE(TWExtension::IsGUID(guid_03));
+        ASSERT_TRUE(TWExtension::IsGUID(guid_04));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_05));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_06));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_07));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_08));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_09));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_10));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_11));
+        ASSERT_FALSE(TWExtension::IsGUID(guid_12));
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(TExtension, IpToMask32)
 {
     //

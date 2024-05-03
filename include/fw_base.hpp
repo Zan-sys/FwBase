@@ -1053,20 +1053,61 @@ namespace Framework {
             //
             static bool IsIP(const T& ip, const std::locale& loc = std::locale())
             {
-                T exp;
-
-                if constexpr(Constexpr::is_string<T>)
+                if (T exp; !ip.empty())
                 {
-                    exp = "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$";
+                    if constexpr(Constexpr::is_string<T>)
+                    {
+                        exp = "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$";
+                    }
+                    else
+                    {
+                        exp = L"^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$";
+                    }
+
+                    std::basic_regex<typename T::value_type> pattern(exp);
+
+                    return std::regex_match(ip, pattern);
                 }
-                else
+
+                return false;
+            }
+
+            //
+            // Строка является GUID пример (9425d577-c090-41d7-a153-dd101e853248)
+            //
+            static bool IsGUID(const T& guid, const std::locale& loc = std::locale())
+            {
+                if (T exp; !guid.empty())
                 {
-                    exp = L"^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$";
+                    if constexpr(Constexpr::is_string<T>)
+                    {
+                        if (guid.front() == '{')
+                        {
+                            exp = "^[{][0-9a-fA-F]{8}[-]([0-9a-fA-F]{4}[-]){3}[0-9a-fA-F]{12}[}]$";
+                        }
+                        else
+                        {
+                            exp = "[0-9a-fA-F]{8}[-]([0-9a-fA-F]{4}[-]){3}[0-9a-fA-F]{12}$";
+                        }
+                    }
+                    else
+                    {
+                        if (guid.front() == L'{')
+                        {
+                            exp = L"^[{][0-9a-fA-F]{8}[-]([0-9a-fA-F]{4}[-]){3}[0-9a-fA-F]{12}[}]$";
+                        }
+                        else
+                        {
+                            exp = L"[0-9a-fA-F]{8}[-]([0-9a-fA-F]{4}[-]){3}[0-9a-fA-F]{12}$";
+                        }
+                    }
+
+                    std::basic_regex<typename T::value_type> pattern(exp/*, std::regex_constants::icase*/);
+
+                    return std::regex_match(guid, pattern);
                 }
 
-                std::basic_regex<typename T::value_type> pattern(exp);
-
-                return std::regex_match(ip, pattern);
+                return false;
             }
 
             //
