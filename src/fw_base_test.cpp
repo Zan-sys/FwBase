@@ -3769,6 +3769,68 @@ TEST(StdExtension, TSemaphore7)
     ASSERT_EQ(th1_counter + th2_counter, signal_counter * 2);
 }
 // ---------------------------------------------------------------------------
+TEST(StdExtension, TSemaphore8)
+{
+    bool result(false);
+    std::size_t time(0);
+    Framework::StdExtension::Threading::TSemaphore semaphore;
+
+    std::thread _thread([&]()
+    {
+        auto t1 = std::chrono::high_resolution_clock::now();
+        result = semaphore.WaitFor(300);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+        time = static_cast<std::size_t>(ms_int.count());
+    });
+
+    _thread.join();
+
+    ASSERT_GE(time, std::size_t(300));
+    ASSERT_FALSE(result);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSemaphore9)
+{
+    bool result(false);
+    std::size_t time(0);
+    Framework::StdExtension::Threading::TSemaphore semaphore;
+
+    std::thread _thread([&]()
+    {
+        auto t1 = std::chrono::high_resolution_clock::now();
+        result = semaphore.WaitFor(300);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+        time = static_cast<std::size_t>(ms_int.count());
+    });
+
+    Framework::StdExtension::Threading::TBaseThread::Sleep(static_cast<size_t>(100));
+
+    semaphore.Release();
+
+    _thread.join();
+
+    ASSERT_GE(time, std::size_t(100));
+    ASSERT_TRUE(result);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSemaphore10)
+{
+    std::size_t counter(0);
+
+    Framework::StdExtension::Threading::TSemaphore semaphore;
+
+    semaphore.Release((std::numeric_limits<int32_t>::max)());
+
+    while (semaphore.TryAcquire())
+    {
+        counter++;
+    }
+
+    ASSERT_EQ(counter, (std::numeric_limits<int32_t>::max)());
+}
+// ---------------------------------------------------------------------------
 TEST(StdExtension, TSafeQueue)
 {
     Framework::StdExtension::Threading::TSafeQueue<std::size_t> queue;

@@ -31,6 +31,7 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
+#include <semaphore>
 #include <condition_variable>
 
 #include <cmath>
@@ -2350,12 +2351,10 @@ namespace Framework {
             //
             // Семафор
             //
-            template <typename T = uint32_t> class TBaseSemaphore
+            template <typename T = std::uint32_t> class TBaseSemaphore
             {
             private:
-                std::mutex mtx;
-                std::condition_variable cv;
-                size_t counter;
+                std::counting_semaphore<> semaphore;
 
             public:
                 //
@@ -2366,7 +2365,7 @@ namespace Framework {
                 //
                 // Конструктор
                 //
-                TBaseSemaphore(size_t initial_counter) : counter(initial_counter) {}
+                TBaseSemaphore(size_t initial_counter) : semaphore(initial_counter) {}
 
                 //
                 // Деструктор
@@ -2378,28 +2377,17 @@ namespace Framework {
                 //
                 inline void Wait()
                 {
-                    std::unique_lock<decltype(mtx)> lock(mtx);
-                    cv.wait(lock, [&]() { return counter > 0; });
+                    semaphore.acquire();
+                }
 
-                    if (counter > 0)
-                    {
-                        counter--;
-                    }
+                inline bool TryAcquire()
+                {
+                    return semaphore.try_acquire();
                 }
 
                 inline bool WaitFor(size_t ms)
                 {
-                    std::unique_lock<decltype(mtx)> lock(mtx);
-
-                    if (!cv.wait_for(lock, std::chrono::milliseconds(ms), [&]() { return counter > 0; }))
-                    {
-                        return false;
-                    }
-                    else if (counter > 0)
-                    {
-                        counter--;
-                    }
-                    return true;
+                    return semaphore.try_acquire_for(std::chrono::milliseconds(ms));
                 }
 
                 //
@@ -2407,22 +2395,7 @@ namespace Framework {
                 //
                 inline void Release(size_t count = 1)
                 {
-                    if (count == 0) count++;
-                    {
-                        std::lock_guard<decltype(mtx)> lock(mtx);
-                        counter += count;
-                    }
-                    if (count > 1) cv.notify_all();
-                    else cv.notify_one();
-                }
-
-                //
-                // Сброс счётчика семафора (сброс счётчика до 0, закрытие доступа к ресурсу)
-                //
-                inline void ToZero()
-                {
-                    std::lock_guard<decltype(mtx)> lock(mtx);
-                    counter = 0;
+                    semaphore.release(static_cast<std::ptrdiff_t>(count));
                 }
             };
 
@@ -2588,7 +2561,7 @@ namespace Framework {
                     }
 
                     write_semaphore.Release(count);
-                    read_semaphore.ToZero();
+                    // read_semaphore.ToZero();
                 }
             };
 
