@@ -21,7 +21,7 @@
     inline const char locale_name[] = "";
 #endif
 // ---------------------------------------------------------------------------
-#define CRC_CHECK
+// #define CRC_CHECK
 // ---------------------------------------------------------------------------
 using TSConverter = Framework::String::TConverter<std::string>;
 using TWConverter = Framework::String::TConverter<std::wstring>;

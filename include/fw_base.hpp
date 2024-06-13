@@ -2365,7 +2365,7 @@ namespace Framework {
                 //
                 // Конструктор
                 //
-                TBaseSemaphore(size_t initial_counter) : semaphore(initial_counter) {}
+                TBaseSemaphore(std::size_t initial_counter) : semaphore(initial_counter > static_cast<std::size_t>(std::counting_semaphore<>::max()) ? static_cast<std::size_t>(std::counting_semaphore<>::max()) : initial_counter) {}
 
                 //
                 // Деструктор
@@ -2395,7 +2395,19 @@ namespace Framework {
                 //
                 inline void Release(size_t count = 1)
                 {
+                    if (count > static_cast<std::size_t>(std::counting_semaphore<>::max()))
+                    {
+                        count = static_cast<std::size_t>(std::counting_semaphore<>::max());
+                    }
                     semaphore.release(static_cast<std::ptrdiff_t>(count));
+                }
+
+                //
+                // Сброс счётчика семафора до нуля
+                //
+                inline void ToZero()
+                {
+                    while (semaphore.try_acquire()) {}
                 }
             };
 
@@ -2429,10 +2441,7 @@ namespace Framework {
                 //
                 // Деструктор
                 //
-                ~TSafeQueue()
-                {
-                    while (!queue.empty()) { queue.pop_back(); }
-                }
+                ~TSafeQueue() {}
 
                 //
                 // Запись данных в очередь
@@ -2463,33 +2472,32 @@ namespace Framework {
                 //
                 bool Pop(T& data, size_t ms_wait = (std::numeric_limits<size_t>::max)())
                 {
-                    while (true)
+                    bool result(false);
+
+                    if (ms_wait == (std::numeric_limits<size_t>::max)())
                     {
-                        if (ms_wait == (std::numeric_limits<size_t>::max)())
-                        {
-                            read_semaphore.Wait();
-                        }
-                        else
-                        {
-                            if (!read_semaphore.WaitFor(ms_wait)) return false;
-                        }
-                        {
-                            std::lock_guard<decltype(locker)> lg(locker);
+                        read_semaphore.Wait();
+                    }
+                    else
+                    {
+                        if (!read_semaphore.WaitFor(ms_wait)) return false;
+                    }
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
 
-                            if (queue.empty())
-                            {
-                                continue;
-                            }
-
+                        if (result = !queue.empty(); result)
+                        {
                             data = queue.front();
                             queue.pop_front();
 
-                            write_semaphore.Release();
                         }
-                        break;
+
+                        write_semaphore.Release();
+
+                        return result;
                     }
 
-                    return true;
+                    return result;
                 }
 
                 //
@@ -2497,15 +2505,15 @@ namespace Framework {
                 //
                 bool First(T& data)
                 {
-                    std::lock_guard<decltype(locker)> lg(locker);
-
-                    bool not_empty = !queue.empty();
-
-                    if (not_empty)
+                    bool not_empty(false);
                     {
-                        data = queue.front();
-                    }
+                        std::lock_guard<decltype(locker)> lg(locker);
 
+                        if (not_empty = !queue.empty(); not_empty)
+                        {
+                            data = queue.front();
+                        }
+                    }
                     return not_empty;
                 }
 
@@ -2514,8 +2522,12 @@ namespace Framework {
                 //
                 std::size_t Size()
                 {
-                    std::lock_guard<decltype(locker)> lg(locker);
-                    return std::size(queue);
+                    std::size_t queue_size(0);
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+                        queue_size = std::size(queue);
+                    }
+                    return queue_size;
                 }
 
                 //
@@ -2528,8 +2540,12 @@ namespace Framework {
                 //
                 bool IsEmpty()
                 {
-                    std::lock_guard<decltype(locker)> lg(locker);
-                    return queue.empty();
+                    bool queue_empty(false);
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+                        queue_empty = queue.empty();
+                    }
+                    return queue_empty;
                 }
 
                 //
@@ -2537,8 +2553,12 @@ namespace Framework {
                 //
                 bool IsFull()
                 {
-                    std::lock_guard<decltype(locker)> lg(locker);
-                    return std::size(queue) == max_items;
+                    bool is_full(false);
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+                        is_full = std::size(queue) >= max_items;
+                    }
+                    return is_full;
                 }
 
                 //
@@ -2546,9 +2566,7 @@ namespace Framework {
                 //
                 void Clear(std::function<void(T)> data_routine = nullptr)
                 {
-                   std::lock_guard<decltype(locker)> lg(locker);
-
-                    size_t count(std::size(queue));
+                    std::lock_guard<decltype(locker)> lg(locker);
 
                     while(!queue.empty())
                     {
@@ -2558,10 +2576,10 @@ namespace Framework {
                         }
 
                         queue.pop_front();
-                    }
 
-                    write_semaphore.Release(count);
-                    // read_semaphore.ToZero();
+                        write_semaphore.Release();
+                        read_semaphore.TryAcquire();
+                    }
                 }
             };
 
