@@ -2584,7 +2584,7 @@ namespace Framework {
             };
 
             //
-            // Пул памяти
+            // Пул памяти (безопасный)
             //
             template <typename T = int8_t> class TSafeMemoryPool
             {
@@ -2701,6 +2701,125 @@ namespace Framework {
                                 {
                                     used_mem_blocks.push_back(mem_block);
                                 }
+                            }
+                        }
+                    }
+
+                    //
+                    // Количество элементов в блоке памяти
+                    //
+                    std::size_t NumElements() { return _num_elements; }
+
+                    //
+                    // Размер блока памяти в байтах
+                    //
+                    std::size_t SizeMemBlock() { return _num_elements * sizeof(T); }
+            };
+
+            //
+            // Пул памяти (небезопасный)
+            //
+            template <typename T = int8_t> class TMemoryPool
+            {
+                private:
+                    std::size_t _num_elements;      // Количество элементов в одном блоке памяти
+
+                    std::deque<T*> all_mem_blocks;  // Список всех блоков памяти
+
+                    std::deque<T*> used_mem_blocks; // Список используемых блоков памяти
+
+                    //
+                    // Инициализация нового блока памяти
+                    //
+                    T* NewMemBlock() { return _num_elements > 1 ? new T[_num_elements] : new T; }
+
+                    //
+                    // Освобождение памяти выделенной под блок памяти
+                    //
+                    void FreeMemBlock(T* mem_block)
+                    {
+                        if (mem_block)
+                        {
+                            if (_num_elements > 1)
+                                delete [] mem_block;
+                            else
+                                delete mem_block;
+                        }
+                    }
+
+                public:
+                    //
+                    // Конструктор
+                    //
+                    TMemoryPool(std::size_t num_elements) : _num_elements(num_elements == 0 ? 1 : num_elements) {}
+
+                    //
+                    // Деструктор
+                    //
+                    ~TMemoryPool()
+                    {
+                        using namespace std;
+                        //
+                        // Освобождение памяти
+                        //
+                        for_each(begin(all_mem_blocks), end(all_mem_blocks), bind(&TMemoryPool<T>::FreeMemBlock, this, placeholders::_1));
+                        //
+                        // Очистка списков
+                        //
+                        all_mem_blocks.clear();
+                        used_mem_blocks.clear();
+                    }
+
+                    //
+                    // Выделение памяти
+                    //
+                    T* New(std::function<void(T*, std::size_t)> data_routine = nullptr)
+                    {
+                        T* mem_block(nullptr);
+
+                        if (used_mem_blocks.empty())
+                        {
+                            mem_block = NewMemBlock();
+
+                            all_mem_blocks.push_back(mem_block);
+                        }
+                        else
+                        {
+                            mem_block = used_mem_blocks.front();
+
+                            used_mem_blocks.pop_front();
+                        }
+
+                        if (data_routine) data_routine(mem_block, _num_elements);
+
+                        return mem_block;
+                    }
+
+                    //
+                    // Быстрый возврат памяти в пул
+                    //
+                    void Delete(T* mem_block, std::function<void(T*, std::size_t)> data_routine = nullptr)
+                    {
+                        if (mem_block)
+                        {
+                            if (data_routine) data_routine(mem_block, _num_elements);
+
+                            used_mem_blocks.push_back(mem_block);
+                        }
+                    }
+
+                    //
+                    // Безопасный возврат памяти в пул
+                    //
+                    void SafeDelete(T* mem_block, std::function<void(T*, std::size_t)> data_routine = nullptr)
+                    {
+                        if (mem_block)
+                        {
+                            if (data_routine) data_routine(mem_block, _num_elements);
+
+                            if (auto check(find(begin(all_mem_blocks), end(all_mem_blocks), mem_block)); check != end(all_mem_blocks))
+                            {
+                                used_mem_blocks.push_back(mem_block);
                             }
                         }
                     }
