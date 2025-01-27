@@ -3072,7 +3072,7 @@ TEST(StdExtension, IsNormal)
     ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::epsilon()));
     ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::round_error()));
     ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(0.0));
-    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(0.0));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(-0.0));
     ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::pi));
     ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::e));
     ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::log2e));
