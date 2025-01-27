@@ -3,6 +3,8 @@
 // ---------------------------------------------------------------------------
 #include <fw_base.hpp>
 // ---------------------------------------------------------------------------
+#include <numbers>
+// ---------------------------------------------------------------------------
 //
 // Тип операционной системы
 //
@@ -3056,6 +3058,30 @@ TEST(StdExtension, LinuxCmdArgs)
         ASSERT_EQ(_path.filename().wstring(), std::wstring(L"FwBaseTest"));
     }
 #endif
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, IsNormal)
+{
+    ASSERT_FALSE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::infinity()));
+    ASSERT_FALSE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::quiet_NaN()));
+    ASSERT_FALSE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::signaling_NaN()));
+    ASSERT_FALSE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::min()/2.0));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::min()));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::max()));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::lowest()));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::epsilon()));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numeric_limits<double>::round_error()));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(0.0));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(0.0));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::pi));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::e));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::log2e));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::log10e));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::ln2));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::ln10));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::sqrt2));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::sqrt3));
+    ASSERT_TRUE(Framework::StdExtension::IsNormal<double>(std::numbers::phi));
 }
 // ---------------------------------------------------------------------------
 TEST(StdExtension, TableAlignS)

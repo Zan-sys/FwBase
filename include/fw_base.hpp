@@ -1704,6 +1704,14 @@ namespace Framework {
             GetTime(std::chrono::system_clock::now(), time, milliseconds, add_year1900_month1, UTC);
         }
         //
+        // Проверка что числа нормальные
+        //
+        template<typename Type> bool IsNormal(Type value)
+        {
+            static_assert(Constexpr::is_float<Type>, "This template requires the type float or double.");
+            return (value == 0.0) || std::isnormal(value);
+        }
+        //
         // Выравнивание строк в таблице
         //
         enum class TTableAlign { None, Left, Right, Center };
