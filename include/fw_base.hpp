@@ -1704,6 +1704,24 @@ namespace Framework {
             GetTime(std::chrono::system_clock::now(), time, milliseconds, add_year1900_month1, UTC);
         }
         //
+        // Метод возвращает время в миллисекундах
+        //
+        template <typename Type = std::chrono::steady_clock> typename std::chrono::milliseconds::rep GetMilliseconds(std::optional<typename Type::time_point> clock_now = std::nullopt)
+        {
+            typename Type::time_point _clock_now;
+
+            if (clock_now)
+            {
+                _clock_now = *clock_now;
+            }
+            else
+            {
+                _clock_now = Type::now();
+            }
+
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_clock_now.time_since_epoch()).count();
+        }
+        //
         // Проверка что числа нормальные
         //
         template<typename Type> bool IsNormal(Type value)

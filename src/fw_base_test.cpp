@@ -3032,6 +3032,24 @@ TEST(StdExtension, GetTimeLocal)
     ASSERT_EQ(static_cast<std::size_t>(_milliseconds.count()), static_cast<std::size_t>(milliseconds));
 }
 // ---------------------------------------------------------------------------
+TEST(StdExtension, GetMillisecondsNullopt)
+{
+    auto counter = Framework::StdExtension::GetMilliseconds();
+    ASSERT_GT(counter, 0);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, GetMillisecondsSteadyClock)
+{
+    auto counter = Framework::StdExtension::GetMilliseconds(std::chrono::steady_clock::now());
+    ASSERT_GT(counter, 0);
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, GetMillisecondsSystemClock)
+{
+    auto counter = Framework::StdExtension::GetMilliseconds<std::chrono::system_clock>(std::chrono::system_clock::now());
+    ASSERT_GT(counter, 0);
+}
+// ---------------------------------------------------------------------------
 TEST(StdExtension, LinuxCmdArgs)
 {
 #ifdef LINUX
