@@ -1722,6 +1722,14 @@ namespace Framework {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_clock_now.time_since_epoch()).count();
         }
         //
+        // Метод возвращает время включения ПК
+        //
+        template <typename Type = std::chrono::system_clock::time_point> Type GetBootUpTime()
+        {
+            auto _milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch());
+            return std::chrono::system_clock::now() - _milliseconds;
+        }
+        //
         // Проверка что числа нормальные
         //
         template<typename Type> bool IsNormal(Type value)

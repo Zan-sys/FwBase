@@ -3050,6 +3050,18 @@ TEST(StdExtension, GetMillisecondsSystemClock)
     ASSERT_GT(counter, 0);
 }
 // ---------------------------------------------------------------------------
+TEST(StdExtension, GetBootUpTime)
+{
+    tm _tm = {0};
+    tm _tm_zero = {0};
+    uint16_t milliseconds(0);
+
+    auto time = Framework::StdExtension::GetBootUpTime();
+    Framework::StdExtension::GetTime(time, _tm, milliseconds, true, false);
+
+    ASSERT_TRUE(std::memcmp(&_tm, &_tm_zero, sizeof(tm)) != 0);
+}
+// ---------------------------------------------------------------------------
 TEST(StdExtension, LinuxCmdArgs)
 {
 #ifdef LINUX
