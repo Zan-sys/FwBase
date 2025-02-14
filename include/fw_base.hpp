@@ -21,6 +21,7 @@
 #include <codecvt>
 #include <ctime>
 #include <chrono>
+#include <optional>
 
 #include <set>
 #include <map>
