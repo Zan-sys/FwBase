@@ -1633,6 +1633,28 @@ TEST(TExtension, Compare04)
     }
 }
 // ---------------------------------------------------------------------------
+TEST(TExtension, Compare05)
+{
+    {
+        enum class TTestEnum01 { None01, THelloWorld01, TExtension01, TPlayMusic01 };
+        enum class TTestEnum02 { None02, THelloWorld02, TExtension02, TPlayMusic02 };
+
+        std::vector<TTestEnum01> _vector_in { TTestEnum01::None01, TTestEnum01::THelloWorld01, TTestEnum01::TExtension01, TTestEnum01::TPlayMusic01 };
+        std::vector<TTestEnum02> _vector_out { TTestEnum02::None02, TTestEnum02::THelloWorld02, TTestEnum02::TExtension02, TTestEnum02::TPlayMusic02 };
+
+        ASSERT_EQ(TSExtension::Compare(TTestEnum01::THelloWorld01, _vector_in, _vector_out, TTestEnum02::None02), TTestEnum02::THelloWorld02);
+    }
+    {
+        enum class TTestEnum01 { None01, THelloWorld01, TExtension01, TPlayMusic01 };
+        enum class TTestEnum02 { None02, TExtension02, TPlayMusic02 };
+
+        std::vector<TTestEnum01> _vector_in { TTestEnum01::None01, TTestEnum01::THelloWorld01, TTestEnum01::TExtension01, TTestEnum01::TPlayMusic01 };
+        std::vector<TTestEnum02> _vector_out { TTestEnum02::None02, TTestEnum02::TExtension02, TTestEnum02::TPlayMusic02 };
+
+        ASSERT_EQ(TSExtension::Compare(TTestEnum01::THelloWorld01, _vector_in, _vector_out, TTestEnum02::None02), TTestEnum02::None02);
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(TExtension, Split)
 {
     //

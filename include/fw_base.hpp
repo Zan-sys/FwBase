@@ -899,6 +899,26 @@ namespace Framework {
 
                 return def;
             }
+
+            template <typename T1, typename T2> static T2 Compare(const T1& source1, const std::vector<T1>& source2, const std::vector<T2>& result, const T2& def)
+            {
+                using namespace std;
+
+                if (size(source2) == size(result))
+                {
+                    for (auto i = begin(source2); i != end(source2); i++)
+                    {
+                        if (source1 == *i)
+                        {
+                            size_t index = distance(begin(source2), i);
+
+                            return result.at(index);
+                        }
+                    }
+                }
+
+                return def;
+            }
             //
             // Разбиение строки
             //
