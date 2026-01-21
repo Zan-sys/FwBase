@@ -1,5 +1,5 @@
 /*
-    Версия 7 от 2024.04.12 автор ZAN
+    Версия 8 от 2026.01.21 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
