@@ -2707,6 +2707,102 @@ TEST(TEncoding, IsUtf8)
     }
     #endif
 }
+// ---------------------------------------------------------------------------
+TEST(TEncoding, StringSymbolsLength)
+{
+    std::locale _locale(locale_name);
+    //
+    // TSEncoding (eng)
+    //
+    {
+        std::string value("Hello World");
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(11));
+    }
+    //
+    // TSEncoding (ru) 1
+    //
+    {
+        std::string value("Привет Мир");
+        T_VOID_AUTO_ENCODING(value);
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(10));
+    }
+    //
+    // TSEncoding (ru) 2
+    //
+    {
+        std::string value("Привет Мир");
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(10));
+    }
+    //
+    // TSEncoding (eng-ru) 1
+    //
+    {
+        std::string value("Hello Мир");
+        T_VOID_AUTO_ENCODING(value);
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(9));
+    }
+    //
+    // TSEncoding (eng-ru) 2
+    //
+    {
+        std::string value("Hello Мир");
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(9));
+    }
+    //
+    // TSEncoding (ru-eng) 1
+    //
+    {
+        std::string value("Привет World");
+        T_VOID_AUTO_ENCODING(value);
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(12));
+    }
+    //
+    // TSEncoding (ru-eng) 2
+    //
+    {
+        std::string value("Привет World");
+        std::size_t length(TSEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(12));
+    }
+    //
+    // TWEncoding (eng)
+    //
+    {
+        std::wstring value(L"Hello World");
+        std::size_t length(TWEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(11));
+    }
+    //
+    // TWEncoding (ru)
+    //
+    {
+        std::wstring value(L"Привет Мир");
+        std::size_t length(TWEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(10));
+    }
+    //
+    // TWEncoding (eng-ru)
+    //
+    {
+        std::wstring value(L"Hello Мир");
+        std::size_t length(TWEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(9));
+    }
+    //
+    // TWEncoding (ru-eng)
+    //
+    {
+        std::wstring value(L"Привет World");
+        std::size_t length(TWEncoding::StringSymbolsLength(value, _locale));
+        ASSERT_EQ(length, std::size_t(12));
+    }
+}
 #pragma endregion
 // ---------------------------------------------------------------------------
 #pragma region StdExtension

@@ -1597,6 +1597,26 @@ namespace Framework {
             {
                 return IsUtf8(value, loc) ? Utf8ToCp1251(value, loc) : value;
             }
+
+            //
+            // Длинна строки в символах а не в байтах
+            //
+            static size_t StringSymbolsLength(const T& value, const std::locale& loc = std::locale())
+            {
+                std::string ascii = TConverter<std::string>::ToString(value, loc);
+
+                if (is_utf8(ascii.c_str()))
+                {
+                    std::size_t length(0);
+                    const char* s(ascii.c_str());
+                    while (*s) length += (*s++ & 0xc0) != 0x80 ? 1 : 0;
+                    return length;
+                }
+                else
+                {
+                    return std::size(ascii);
+                }
+            }
         };
 
         using TStringEncoding = TEncoding<std::string>;
@@ -1772,6 +1792,8 @@ namespace Framework {
                 , "This template requires the type std::vector<std::string|std::wstring>."
             );
 
+            using TTEncoding = String::TEncoding<typename Type::value_type::value_type>;
+
             if (align != TTableAlign::None)
             {
                 if (size_t row_len(size(table) > 0 ? size(table.at(0)) : 0); row_len > 0)
@@ -1801,7 +1823,7 @@ namespace Framework {
                         {
                             VOID_AUTO_ENCODING(typename Type::value_type::value_type, table.at(i).at(k));
 
-                            size_t length(size(table.at(i).at(k)));
+                            size_t length = TTEncoding::StringSymbolsLength(table.at(i).at(k));
 
                             if (length > max_size.at(k))
                             {
@@ -1822,7 +1844,9 @@ namespace Framework {
                     //
                     for (size_t i(0), k(0); k < size(max_size); )
                     {
-                        size_t add_blanks = max_size.at(k) - size(table.at(i).at(k));
+                        size_t length = TTEncoding::StringSymbolsLength(table.at(i).at(k));
+
+                        size_t add_blanks = max_size.at(k) - length;
 
                         if (align == TTableAlign::Left)
                         {
