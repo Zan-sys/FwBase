@@ -2358,9 +2358,8 @@ namespace Framework {
             template <typename T = uint32_t> class TBaseTh
             {
             private:
-                bool terminated; // Запрос на остановку потока
-                bool _create_suspended; // Запуск потока
-                std::unique_ptr<std::thread> base_thread; // Поток
+                bool terminated;                            // Запрос на остановку потока
+                std::unique_ptr<std::thread> base_thread;   // Поток
 
                 //
                 // Запуск потока
@@ -2385,16 +2384,23 @@ namespace Framework {
                 }
 
             protected:
-                virtual void Execute() = 0; // Исполнительный метод потока
-                bool Terminated() { return terminated; } // Метод возвращает запрос на завершение потока
-                // !!!ВАЖНО!!! Вызывать в конструкторе дочернего класса после инициализации всех параметров
-                void ThreadRun() { if (_create_suspended == false) Run(); } // Запуск потока из конструктора дочернего класса
+                //
+                // Исполнительный метод потока
+                // !!!ВАЖНО!!! ВЫЗОВ ВИРТУАЛЬНОГО МЕТОДА В КОНСТРУКТОРЕ
+                // ПРИВОДИТ К НЕОПРЕДЕЛЁННОМУ ПОВЕДЕНИЮ В ПРОГРАММЕ
+                // !!!ОШИБКА!!!
+                // 
+                virtual void Execute() = 0;
+                //
+                // Метод возвращает запрос на завершение потока
+                //
+                bool Terminated() { return terminated; }
 
             public:
                 //
                 // Конструктор
                 //
-                TBaseTh(bool create_suspended = false) : terminated(false), _create_suspended(create_suspended), base_thread(nullptr) {}
+                TBaseTh() : terminated(false), base_thread(nullptr) {}
                 //
                 // Деструктор
                 //
