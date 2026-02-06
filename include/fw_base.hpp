@@ -2450,7 +2450,7 @@ namespace Framework {
                 //
                 // Конструктор
                 //
-                TBaseSemaphore(std::size_t initial_counter) : semaphore(initial_counter > static_cast<std::size_t>(std::counting_semaphore<>::max()) ? static_cast<std::size_t>(std::counting_semaphore<>::max()) : initial_counter) {}
+                TBaseSemaphore(std::size_t initial_counter) : semaphore(initial_counter > static_cast<std::size_t>((std::counting_semaphore<>::max)()) ? static_cast<std::size_t>((std::counting_semaphore<>::max)()) : initial_counter) {}
 
                 //
                 // Деструктор
@@ -2480,9 +2480,9 @@ namespace Framework {
                 //
                 inline void Release(size_t count = 1)
                 {
-                    if (count > static_cast<std::size_t>(std::counting_semaphore<>::max()))
+                    if (count > static_cast<std::size_t>((std::counting_semaphore<>::max)()))
                     {
-                        count = static_cast<std::size_t>(std::counting_semaphore<>::max());
+                        count = static_cast<std::size_t>((std::counting_semaphore<>::max)());
                     }
                     semaphore.release(static_cast<std::ptrdiff_t>(count));
                 }
