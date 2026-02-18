@@ -3041,9 +3041,10 @@ namespace Framework {
             template <typename T = int8_t> class TSafeBuffer
             {
             private:
-                std::mutex locker;          // Обеспечивает монопольный доступ к данным класса
-                std::vector<T> buffer;      // Буфер для хранения данных
-                std::size_t buffer_size;    // Размер буфера в байтах
+                std::mutex locker;                          // Обеспечивает монопольный доступ к данным класса
+                std::vector<T> buffer;                      // Буфер для хранения данных
+                std::size_t buffer_size;                    // Размер буфера в байтах
+                std::size_t reads_counter_before_update;    // Количество чтений до обновления данных в буфере
 
             public:
                 //
@@ -3056,6 +3057,8 @@ namespace Framework {
                     buffer.resize(num_elemets);
 
                     buffer_size = num_elemets * sizeof(T);
+
+                    reads_counter_before_update = 0;
                 }
 
                 //
@@ -3068,6 +3071,8 @@ namespace Framework {
                     buffer.resize(num_elemets, value);
 
                     buffer_size = num_elemets * sizeof(T);
+
+                    reads_counter_before_update = 0;
                 }
 
                 //
@@ -3097,6 +3102,8 @@ namespace Framework {
 
                         std::memcpy(std::data(buffer), data, data_size);
 
+                        reads_counter_before_update = 0;
+
                         return true;
                     }
 
@@ -3106,13 +3113,20 @@ namespace Framework {
                 //
                 // Чтение данных из буфера
                 //
-                bool Read(void* data, std::size_t data_size)
+                bool Read(void* data, std::size_t data_size, std::size_t* reads_counter = nullptr)
                 {
                     if (data && (data_size >= buffer_size))
                     {
                         std::lock_guard<decltype(locker)> lg(locker);
 
                         std::memcpy(data, std::data(buffer), buffer_size);
+
+                        reads_counter_before_update++;
+
+                        if (reads_counter)
+                        {
+                            *reads_counter = reads_counter_before_update;
+                        }
 
                         return true;
                     }

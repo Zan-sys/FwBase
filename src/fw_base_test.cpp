@@ -4280,7 +4280,7 @@ TEST(StdExtension, TSafeArrayQueueFalse04)
     ASSERT_FALSE(queue.Push(buffer.data(), buffer.size(), 1000));
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeBuffer01)
+TEST(StdExtension, TSafeBuffer_01)
 {
     std::vector<int8_t> buffer(100, -1);
 
@@ -4297,7 +4297,7 @@ TEST(StdExtension, TSafeBuffer01)
     ASSERT_TRUE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeBuffer02)
+TEST(StdExtension, TSafeBuffer_02)
 {
     std::vector<uint8_t> buffer(100);
 
@@ -4323,7 +4323,7 @@ TEST(StdExtension, TSafeBuffer02)
     ASSERT_TRUE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeBufferWrite)
+TEST(StdExtension, TSafeBuffer_Write)
 {
     std::vector<uint8_t> buffer(100, 0);
 
@@ -4334,7 +4334,7 @@ TEST(StdExtension, TSafeBufferWrite)
     ASSERT_TRUE(safe_buffer.Write(buffer.data(), buffer.size() - 1));
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeBufferRead)
+TEST(StdExtension, TSafeBuffer_Read)
 {
     std::vector<uint8_t> buffer(100, 0);
 
@@ -4345,7 +4345,7 @@ TEST(StdExtension, TSafeBufferRead)
     ASSERT_TRUE(safe_buffer.Read(buffer.data(), buffer.size()));
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeBufferWriteRead)
+TEST(StdExtension, TSafeBuffer_WriteRead)
 {
     std::vector<uint8_t> buffer(100, -1);
 
@@ -4370,13 +4370,43 @@ TEST(StdExtension, TSafeBufferWriteRead)
     ASSERT_TRUE(memcmp(buffer.data(), read_buffer.data(), buffer.size()) == 0);
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeBufferSize)
+TEST(StdExtension, TSafeBuffer_Size)
 {
     std::vector<double> buffer(100);
 
     Framework::StdExtension::Threading::TSafeBuffer<double> safe_buffer(buffer.size());
 
     ASSERT_EQ(buffer.size() * sizeof(double), safe_buffer.BufferSize());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeBuffer_ReadCounter_01)
+{
+    std::size_t read_counter(0);
+
+    std::vector<double> buffer(100, -1);
+
+    std::vector<uint8_t> read_buffer(buffer.size(), 0);
+
+    ASSERT_EQ(buffer.size(), read_buffer.size());
+
+    Framework::StdExtension::Threading::TSafeBuffer<int8_t> safe_buffer(buffer.size());
+
+    for(std::size_t i(0); i < 100; i++)
+    {
+        ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size(), &read_counter));
+
+        ASSERT_EQ(read_counter, i + 1);
+    }
+
+    ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size(), &read_counter));
+
+    ASSERT_EQ(read_counter, 101);
+
+    ASSERT_TRUE(safe_buffer.Write(buffer.data(), buffer.size()));
+
+    ASSERT_TRUE(safe_buffer.Read(read_buffer.data(), read_buffer.size(), &read_counter));
+
+    ASSERT_EQ(read_counter, 1);
 }
 #pragma endregion
 // ---------------------------------------------------------------------------
