@@ -1,5 +1,5 @@
 /*
-    Версия 9 от 2026.01.22 автор ZAN
+    Версия 10 от 2026.02.18 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -696,6 +696,41 @@ namespace Framework {
                     pos += value.length();
 
                     pos = source.find(search, pos);
+                }
+
+                return source;
+            }
+            //
+            // Поиск и замена строки без учёта регистра
+            //
+            static T& ReplaceAllCaseInsensitive(T& source, const T& search, const T& value, const std::locale& loc = std::locale())
+            {
+                using namespace std;
+
+                wstring temp;
+                //
+                // Конвертирование source
+                //
+                temp = TConverter<wstring>::ToString(source, loc);
+                transform(begin(temp), end(temp), begin(temp), [&](wchar_t c) { return toupper<wchar_t>(c, loc); });
+                T upper_source = TConverter<T>::ToString(temp, loc);
+                //
+                // Конвертирование search
+                //
+                temp = TConverter<wstring>::ToString(search, loc);
+                transform(begin(temp), end(temp), begin(temp), [&](wchar_t c) { return toupper<wchar_t>(c, loc); });
+                T upper_search = TConverter<T>::ToString(temp, loc);
+
+                size_t pos = upper_source.find(upper_search);
+
+                while(pos != T::npos)
+                {
+                    upper_source.replace(pos, upper_search.length(), value);
+                    source.replace(pos, search.length(), value);
+
+                    pos += value.length();
+
+                    pos = upper_source.find(upper_search, pos);
                 }
 
                 return source;

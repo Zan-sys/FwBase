@@ -1032,6 +1032,72 @@ TEST(TFormater, ReplaceAll)
     }
 }
 // ---------------------------------------------------------------------------
+TEST(TFormater, ReplaceAllCaseInsensitive)
+{
+    //
+    // TSFormater (eng)
+    //
+    {
+        std::string input = "Hello test_World!!!";
+        std::string output("Hello World:)");
+
+        TSFormater::ReplaceAllCaseInsensitive(input, "TeSt_", "");
+        auto result = TSFormater::ReplaceAllCaseInsensitive(input, "!!!", ":)");
+
+        ASSERT_EQ(typeid(decltype(output)), typeid(decltype(result)));
+        ASSERT_EQ(output, result);
+    }
+    //
+    // TSFormater (ru)
+    //
+    {
+        std::locale _locale(locale_name);
+
+        std::string input = "Привет тест_Мир!!!";
+        std::string output("Привет Мир:)");
+
+        T_VOID_AUTO_ENCODING_LOC(input, _locale);
+        T_VOID_AUTO_ENCODING_LOC(output, _locale);
+
+        TSFormater::ReplaceAllCaseInsensitive(input, AUTO_ENCODING_LOC(std::string, "ТеСт_", _locale), "", _locale);
+        auto result = TSFormater::ReplaceAllCaseInsensitive(input, "!!!", ":)", _locale);
+
+        ASSERT_EQ(typeid(decltype(output)), typeid(decltype(result)));
+        ASSERT_EQ(output, result);
+    }
+    //
+    // TWFormater (eng)
+    //
+    {
+        std::wstring input = L"Hello test_World!!!";
+        std::wstring output(L"Hello World:)");
+
+        TWFormater::ReplaceAllCaseInsensitive(input, L"TeST_", L"");
+        auto result = TWFormater::ReplaceAllCaseInsensitive(input, L"!!!", L":)");
+
+        ASSERT_EQ(typeid(decltype(output)), typeid(decltype(result)));
+        ASSERT_EQ(output, result);
+    }
+    //
+    // TWFormater (ru)
+    //
+    {
+        std::locale _locale(locale_name);
+
+        std::wstring input = L"Привет тест_Мир!!!";
+        std::wstring output(L"Привет Мир:)");
+
+        T_VOID_AUTO_ENCODING_LOC(input, _locale);
+        T_VOID_AUTO_ENCODING_LOC(output, _locale);
+
+        TWFormater::ReplaceAllCaseInsensitive(input, AUTO_ENCODING_LOC(std::wstring, L"тест_", _locale), L"", _locale);
+        auto result = TWFormater::ReplaceAllCaseInsensitive(input, L"!!!", L":)", _locale);
+
+        ASSERT_EQ(typeid(decltype(output)), typeid(decltype(result)));
+        ASSERT_EQ(output, result);
+    }
+}
+// ---------------------------------------------------------------------------
 TEST(TFormater, UpperFirst)
 {
     //
