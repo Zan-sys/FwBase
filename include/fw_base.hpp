@@ -3178,7 +3178,7 @@ namespace Framework {
             //
             // Триггер
             //
-            template <typename T = uint8_t> class TTrigger
+            template <typename T = uint8_t> class TBaseTrigger
             {
             private:
                 std::mutex locker;          // Обеспечивает монопольный доступ к данным класса
@@ -3189,11 +3189,11 @@ namespace Framework {
                 //
                 // Конструктор
                 //
-                TTrigger() : wait_counter(0), wait_semaphore(0) {}
+                TBaseTrigger() : wait_counter(0), wait_semaphore(0) {}
                 //
                 // Деструктор
                 //
-                ~TTrigger() {};
+                ~TBaseTrigger() {};
                 //
                 // Ожидание триггера
                 //
@@ -3218,6 +3218,8 @@ namespace Framework {
                     }
                 }
             };
+
+            using TTrigger = TBaseTrigger<>;
         }
     }
     //
