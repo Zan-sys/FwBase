@@ -3174,6 +3174,50 @@ namespace Framework {
                 //
                 std::size_t BufferSize() { return buffer_size; }
             };
+
+            //
+            // Триггер
+            //
+            template <typename T = uint8_t> class TTrigger
+            {
+            private:
+                std::mutex locker;          // Обеспечивает монопольный доступ к данным класса
+                size_t wait_counter;        // Количество потоков ожидающих освобождения триггера
+                TSemaphore wait_semaphore;  // Объект блокировки
+            
+            public:
+                //
+                // Конструктор
+                //
+                TTrigger() : wait_counter(0), wait_semaphore(0) {}
+                //
+                // Деструктор
+                //
+                ~TTrigger() {};
+                //
+                // Ожидание триггера
+                //
+                inline void Wait()
+                {
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+                        wait_counter++;
+                    }
+                    wait_semaphore.Wait();
+                }
+                //
+                // Поднятие триггера
+                //
+                inline void Up()
+                {
+                    std::lock_guard<decltype(locker)> lg(locker);
+                    if (wait_counter > 0)
+                    {
+                        wait_semaphore.Release(wait_counter);
+                        wait_counter = 0;
+                    }
+                }
+            };
         }
     }
     //

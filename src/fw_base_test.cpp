@@ -4474,6 +4474,38 @@ TEST(StdExtension, TSafeBuffer_ReadCounter_01)
 
     ASSERT_EQ(read_counter, 1);
 }
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TTrigger_01)
+{
+    std::atomic<std::size_t> counter(0);
+
+    std::vector<std::thread> threads;
+
+    Framework::StdExtension::Threading::TTrigger trigger;
+
+    for (size_t i(0); i < 10; i++)
+    {
+        threads.push_back(std::thread([&counter, &trigger]()
+        {
+            trigger.Wait();
+            counter++;
+        }));
+    }
+
+    Framework::StdExtension::Threading::TBaseThread::Sleep(100);
+
+    ASSERT_EQ(counter, 0);
+
+    trigger.Up();
+
+    for (auto& th : threads)
+    {
+        ASSERT_TRUE(th.joinable());
+        th.join();
+    }
+
+    ASSERT_EQ(counter, 10);
+}
 #pragma endregion
 // ---------------------------------------------------------------------------
 #pragma region Crypto
