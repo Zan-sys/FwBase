@@ -1,5 +1,5 @@
 /*
-    Версия 11 от 2026.03.25 автор ZAN
+    Версия 12 от 2026.06.09 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -2545,6 +2545,33 @@ namespace Framework {
                 size_t max_items; // Максимальное количество записей в очереди
                 std::deque<T> queue; // Очередь
 
+                //
+                // Запись данных очереди
+                //
+                inline bool _Push(const T& data, bool front, std::size_t ms_wait)
+                {
+                    if (ms_wait == (std::numeric_limits<size_t>::max)())
+                    {
+                        write_semaphore.Wait();
+                    }
+                    else
+                    {
+                        if (!write_semaphore.WaitFor(ms_wait)) return false;
+                    }
+                    {
+                        std::lock_guard<decltype(locker)> lg(locker);
+
+                        if (front)
+                            queue.push_front(data);
+                        else
+                            queue.push_back(data);
+
+                        read_semaphore.Release();
+                    }
+
+                    return true;
+                }
+
             public:
                 //
                 // Конструктор
@@ -2564,27 +2591,19 @@ namespace Framework {
                 ~TSafeQueue() {}
 
                 //
-                // Запись данных в очередь
+                // Запись данных в конец очереди
                 //
                 bool Push(const T& data, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
                 {
-                    if (ms_wait == (std::numeric_limits<size_t>::max)())
-                    {
-                        write_semaphore.Wait();
-                    }
-                    else
-                    {
-                        if (!write_semaphore.WaitFor(ms_wait)) return false;
-                    }
-                    {
-                        std::lock_guard<decltype(locker)> lg(locker);
+                    return _Push(data, false, ms_wait);
+                }
 
-                        queue.push_back(data);
-
-                        read_semaphore.Release();
-                    }
-
-                    return true;
+                //
+                // Запись данных в начало очереди
+                //
+                bool PushFront(const T& data, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
+                {
+                    return _Push(data, true, ms_wait);
                 }
 
                 //
@@ -2618,6 +2637,34 @@ namespace Framework {
                     }
 
                     return result;
+                }
+
+                //
+                // Запись данных в очередь, даже если она переполнена
+                //
+                void PushAlways(const T& data, std::function<void(T&)> data_deleter = nullptr)
+                {
+                    std::lock_guard<decltype(locker)> lg(locker);
+
+                    if (bool is_full(std::size(queue) >= max_items); is_full)
+                    {
+                        T& _data(queue.front());
+
+                        queue.pop_front();
+
+                        if (data_deleter)
+                        {
+                            data_deleter(_data);
+                        }
+
+                        queue.push_back(data);
+                    }
+                    else
+                    {
+                        queue.push_back(data);
+
+                        read_semaphore.Release();
+                    }
                 }
 
                 //
@@ -2684,7 +2731,7 @@ namespace Framework {
                 //
                 // Очистка очереди
                 //
-                void Clear(std::function<void(T)> data_routine = nullptr)
+                void Clear(std::function<void(T&)> data_routine = nullptr)
                 {
                     std::lock_guard<decltype(locker)> lg(locker);
 
@@ -2963,6 +3010,38 @@ namespace Framework {
             private:
                 TSafeMemoryPool<T> mem_pool;    // Пул для управления памятью
 
+                //
+                // Запись данных в очередь
+                //
+                inline bool _Push(const void* data, std::size_t data_size, bool front, std::size_t ms_wait)
+                {
+                    if (data && (data_size <= mem_pool.SizeMemBlock()))
+                    {
+                        T* mem_block = mem_pool.New();
+
+                        std::memcpy(mem_block, data, data_size);
+
+                        if (front)
+                        {
+                            if (TSafeQueue<T*>::PushFront(mem_block, ms_wait))
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            if (TSafeQueue<T*>::Push(mem_block, ms_wait))
+                            {
+                                return true;
+                            }
+                        }
+
+                        mem_pool.Delete(mem_block);
+                    }
+
+                    return false;
+                }
+
             public:
                 //
                 // Конструктор
@@ -2980,25 +3059,19 @@ namespace Framework {
                 ~TSafeArrayQueue() {}
 
                 //
-                // Запись данных в очередь
+                // Запись данных в конец очереди
                 //
                 bool Push(const void* data, std::size_t data_size, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
                 {
-                    if (data && (data_size <= mem_pool.SizeMemBlock()))
-                    {
-                        T* mem_block = mem_pool.New();
+                    return _Push(data, data_size, false, ms_wait);
+                }
 
-                        std::memcpy(mem_block, data, data_size);
-
-                        if (TSafeQueue<T*>::Push(mem_block, ms_wait))
-                        {
-                            return true;
-                        }
-
-                        mem_pool.Delete(mem_block);
-                    }
-
-                    return false;
+                //
+                // Запись данных в начало очереди
+                //
+                bool PushFront(const void* data, std::size_t data_size, std::size_t ms_wait = (std::numeric_limits<size_t>::max)())
+                {
+                    return _Push(data, data_size, true, ms_wait);
                 }
 
                 //
@@ -3016,6 +3089,25 @@ namespace Framework {
 
                             return true;
                         }
+                    }
+
+                    return false;
+                }
+
+                //
+                // Запись данных в очередь, даже если она переполнена
+                //
+                bool PushAlways(const void* data, std::size_t data_size)
+                {
+                    if (data && (data_size <= mem_pool.SizeMemBlock()))
+                    {
+                        T* mem_block = mem_pool.New();
+
+                        std::memcpy(mem_block, data, data_size);
+
+                        TSafeQueue<T*>::PushAlways(mem_block, [this](T* _deleted_mem_block) { if (_deleted_mem_block) mem_pool.Delete(_deleted_mem_block); });
+
+                        return true;
                     }
 
                     return false;
