@@ -4175,7 +4175,7 @@ TEST(StdExtension, TSafeQueue_Pop)
     ASSERT_EQ(value, 3);
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeQueue_PushAlways01)
+TEST(StdExtension, TSafeQueue_PushAlways)
 {
     std::size_t max_size(10);
     Framework::StdExtension::Threading::TSafeQueue<std::size_t> queue(max_size);
@@ -4203,7 +4203,35 @@ TEST(StdExtension, TSafeQueue_PushAlways01)
     ASSERT_TRUE(queue.IsEmpty());
 }
 // ---------------------------------------------------------------------------
-TEST(StdExtension, TSafeQueue_PushAlways02)
+TEST(StdExtension, TSafeQueue_PushAlways_DeleteFront_True_01)
+{
+    std::size_t max_size(10);
+    Framework::StdExtension::Threading::TSafeQueue<std::size_t> queue(max_size);
+
+    for (size_t i(0); i < 20; i++)
+    {
+        if (i < max_size) ASSERT_EQ(queue.Size(), i);
+        else ASSERT_EQ(queue.Size(), max_size);
+
+        if (i < max_size) ASSERT_FALSE(queue.IsFull());
+        else ASSERT_TRUE(queue.IsFull());
+
+        queue.PushAlways(i, true);
+    }
+
+    for (size_t i(max_size); i < 20; i++)
+    {
+        std::size_t value(0);
+        ASSERT_TRUE(queue.Pop(value, 10));
+        ASSERT_EQ(i, value);
+    }
+    std::size_t value(0);
+    ASSERT_FALSE(queue.Pop(value, 10));
+    ASSERT_EQ(value, 0);
+    ASSERT_TRUE(queue.IsEmpty());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeQueue_PushAlways_DeleteFront_True_02)
 {
     std::size_t max_size(10);
     std::deque<std::size_t> values;
@@ -4217,7 +4245,7 @@ TEST(StdExtension, TSafeQueue_PushAlways02)
         if (i < max_size) ASSERT_FALSE(queue.IsFull());
         else ASSERT_TRUE(queue.IsFull());
 
-        queue.PushAlways(i, [&](std::size_t& _value)
+        queue.PushAlways(i, true, [&](std::size_t& _value)
         {
             ASSERT_EQ(_value, values.front());
             values.pop_front();
@@ -4240,6 +4268,73 @@ TEST(StdExtension, TSafeQueue_PushAlways02)
     ASSERT_EQ(value, 0);
     ASSERT_TRUE(queue.IsEmpty());
     ASSERT_TRUE(values.empty());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeQueue_PushAlways_DeleteFront_False_01)
+{
+    std::size_t max_size(10);
+    Framework::StdExtension::Threading::TSafeQueue<std::size_t> queue(max_size);
+
+    for (size_t i(0); i < 20; i++)
+    {
+        if (i < max_size) ASSERT_EQ(queue.Size(), i);
+        else ASSERT_EQ(queue.Size(), max_size);
+
+        if (i < max_size) ASSERT_FALSE(queue.IsFull());
+        else ASSERT_TRUE(queue.IsFull());
+
+        queue.PushAlways(i, false);
+    }
+
+    ASSERT_EQ(queue.Size(), max_size);
+
+    for (size_t i(0); i < max_size; i++)
+    {
+        std::size_t value(0);
+        ASSERT_TRUE(queue.Pop(value, 10));
+        if (i < (max_size - 1)) ASSERT_EQ(i, value);
+        else ASSERT_EQ(19, value);
+    }
+    std::size_t value(0);
+    ASSERT_FALSE(queue.Pop(value, 10));
+    ASSERT_EQ(value, 0);
+    ASSERT_TRUE(queue.IsEmpty());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeQueue_PushAlways_DeleteFront_False_02)
+{
+    std::size_t max_size(10);
+    Framework::StdExtension::Threading::TSafeQueue<std::size_t> queue(max_size);
+
+    for (size_t i(0); i < 20; i++)
+    {
+        if (i < max_size) ASSERT_EQ(queue.Size(), i);
+        else ASSERT_EQ(queue.Size(), max_size);
+
+        if (i < max_size) ASSERT_FALSE(queue.IsFull());
+        else ASSERT_TRUE(queue.IsFull());
+
+        queue.PushAlways(i, false, [&](std::size_t& _value)
+        {
+            ASSERT_EQ(_value, i - 1);
+        });
+    }
+
+    ASSERT_EQ(queue.Size(), max_size);
+
+    for (size_t i(0); i < max_size; i++)
+    {
+        std::size_t value(0);
+        ASSERT_TRUE(queue.Pop(value, 10));
+        if (i < (max_size - 1))
+            ASSERT_EQ(i, value);
+        else
+            ASSERT_EQ(19, value);
+    }
+    std::size_t value(0);
+    ASSERT_FALSE(queue.Pop(value, 10));
+    ASSERT_EQ(value, 0);
+    ASSERT_TRUE(queue.IsEmpty());
 }
 // ---------------------------------------------------------------------------
 TEST(StdExtension, TSafeQueue_First_True)
@@ -4681,6 +4776,65 @@ TEST(StdExtension, TSafeArrayQueue_PushAlways)
     {
         ASSERT_TRUE(queue.Pop(std::data(buffer), std::size(buffer), 10));
         ASSERT_EQ(i, static_cast<decltype(i)>(buffer.front()));
+    }
+    ASSERT_FALSE(queue.Pop(std::data(buffer), std::size(buffer), 10));
+    ASSERT_EQ(19, buffer.front());
+    ASSERT_TRUE(queue.IsEmpty());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueue_PushAlways_DeleteFront_True)
+{
+    std::size_t num_elemets(100), max_items(10);
+
+    std::vector<int8_t> buffer(num_elemets, 0);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets, max_items);
+
+     for (size_t i(0); i < 20; i++)
+     {
+        std::fill(std::begin(buffer), std::end(buffer), static_cast<int8_t>(i));
+
+        if (i < max_items) ASSERT_EQ(queue.Size(), i);
+        else ASSERT_EQ(queue.Size(), max_items);
+
+        queue.PushAlways(std::data(buffer), std::size(buffer), true);
+     }
+
+    for (size_t i(max_items); i < 20; i++)
+    {
+        ASSERT_TRUE(queue.Pop(std::data(buffer), std::size(buffer), 10));
+        ASSERT_EQ(i, static_cast<decltype(i)>(buffer.front()));
+    }
+    ASSERT_FALSE(queue.Pop(std::data(buffer), std::size(buffer), 10));
+    ASSERT_EQ(19, buffer.front());
+    ASSERT_TRUE(queue.IsEmpty());
+}
+// ---------------------------------------------------------------------------
+TEST(StdExtension, TSafeArrayQueue_PushAlways_DeleteFront_False)
+{
+    std::size_t num_elemets(100), max_items(10);
+
+    std::vector<int8_t> buffer(num_elemets, 0);
+
+    Framework::StdExtension::Threading::TSafeArrayQueue<int8_t> queue(num_elemets, max_items);
+
+     for (size_t i(0); i < 20; i++)
+     {
+        std::fill(std::begin(buffer), std::end(buffer), static_cast<int8_t>(i));
+
+        if (i < max_items) ASSERT_EQ(queue.Size(), i);
+        else ASSERT_EQ(queue.Size(), max_items);
+
+        queue.PushAlways(std::data(buffer), std::size(buffer), false);
+     }
+
+    for (size_t i(0); i < max_items; i++)
+    {
+        ASSERT_TRUE(queue.Pop(std::data(buffer), std::size(buffer), 10));
+        if (i < (max_items - 1))
+            ASSERT_EQ(i, static_cast<decltype(i)>(buffer.front()));
+        else
+            ASSERT_EQ(19, static_cast<decltype(i)>(buffer.front()));
     }
     ASSERT_FALSE(queue.Pop(std::data(buffer), std::size(buffer), 10));
     ASSERT_EQ(19, buffer.front());

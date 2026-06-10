@@ -1,5 +1,5 @@
 /*
-    Версия 12 от 2026.06.09 автор ZAN
+    Версия 13 от 2026.06.10 автор ZAN
 */
 #ifndef FW_BASE_HPP // Begin FW_BASE_HPP
 #define FW_BASE_HPP
@@ -2642,19 +2642,24 @@ namespace Framework {
                 //
                 // Запись данных в очередь, даже если она переполнена
                 //
-                void PushAlways(const T& data, std::function<void(T&)> data_deleter = nullptr)
+                void PushAlways(const T& data, bool delete_front = true, std::function<void(T&)> data_deleter = nullptr)
                 {
                     std::lock_guard<decltype(locker)> lg(locker);
 
                     if (bool is_full(std::size(queue) >= max_items); is_full)
                     {
-                        T& _data(queue.front());
-
-                        queue.pop_front();
-
                         if (data_deleter)
                         {
-                            data_deleter(_data);
+                            data_deleter(delete_front ? queue.front() : queue.back());
+                        }
+
+                        if (delete_front)
+                        {
+                            queue.pop_front();
+                        }
+                        else
+                        {
+                            queue.pop_back();
                         }
 
                         queue.push_back(data);
@@ -3097,7 +3102,7 @@ namespace Framework {
                 //
                 // Запись данных в очередь, даже если она переполнена
                 //
-                bool PushAlways(const void* data, std::size_t data_size)
+                bool PushAlways(const void* data, std::size_t data_size, bool delete_front = true)
                 {
                     if (data && (data_size <= mem_pool.SizeMemBlock()))
                     {
@@ -3105,7 +3110,7 @@ namespace Framework {
 
                         std::memcpy(mem_block, data, data_size);
 
-                        TSafeQueue<T*>::PushAlways(mem_block, [this](T* _deleted_mem_block) { if (_deleted_mem_block) mem_pool.Delete(_deleted_mem_block); });
+                        TSafeQueue<T*>::PushAlways(mem_block, delete_front, [this](T* _deleted_mem_block) { if (_deleted_mem_block) mem_pool.Delete(_deleted_mem_block); });
 
                         return true;
                     }
